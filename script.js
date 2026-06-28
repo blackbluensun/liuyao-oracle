@@ -674,6 +674,179 @@ function contextCompleteness(context) {
   return [context.situation, context.fear, context.goal].filter(Boolean).length;
 }
 
+const CONTEXT_LIBRARY = [
+  {
+    key: "cashPressure",
+    words: ["裸辞", "没存款", "存款不多", "现金流", "房租", "生活费", "亏钱", "成本", "没钱", "资金"],
+    title: "现金压力",
+    meaning: "这件事不能只看机会，还要看你是否扛得住试错成本。卦象如果再出现空亡、受克或多动，就更要先保底。",
+    risk: "最怕为了证明自己而投入超过承受线，或者为了第一单把价格压到没有利润。",
+    action: "先写出最低生活费、可承受亏损额和停止线。任何超过停止线的动作都先不做。",
+    metric: "复盘时看：有没有真实询单、有没有不亏钱的成交、有没有新增支出。",
+  },
+  {
+    key: "newAccount",
+    words: ["新号", "小红书", "没粉丝", "没人买", "没有成交", "没流量", "没人看", "互动", "评论", "私信"],
+    title: "新账号冷启动",
+    meaning: "新号阶段重点不是马上赚钱，而是验证内容有没有被看见、有没有人愿意问。卦象中的应爻更像市场反馈。",
+    risk: "最怕把低浏览理解成失败，然后频繁换方向，导致账号没有稳定标签。",
+    action: "先连续发同一方向的3到5条内容，每条只测试一个变量：标题、封面、价格或风格。",
+    metric: "复盘时看：浏览、收藏、评论、私信，有没有人问价格或尺码。",
+  },
+  {
+    key: "productTest",
+    words: ["选品", "测款", "一件代发", "供应链", "1688", "样衣", "定价", "包邮", "退换货", "发货"],
+    title: "选品与供应链",
+    meaning: "这类问题要看用神是否实、动爻是否回头克。即使卦象可试，也要先把发货和售后确认清楚。",
+    risk: "最怕用户想下单时，你还没确认库存、运费、退换货，导致信任损失。",
+    action: "先问清：是否无痕代发、单件运费、发货时效、退换规则、偏远地区费用。",
+    metric: "复盘时看：供应商回复速度、库存稳定性、总成本、用户是否接受价格。",
+  },
+  {
+    key: "mentalLoad",
+    words: ["焦虑", "崩溃", "撑不住", "摆烂", "精神", "压力", "睡不着", "害怕", "迷茫", "痛苦"],
+    title: "身心消耗",
+    meaning: "如果你问事时已经处在高压状态，卦象要先当作节奏提醒，而不是逼自己立刻做重大决定。",
+    risk: "最怕把焦虑误认为直觉，把短期低谷误认为命运结论。",
+    action: "今天只保留一个最小动作，其他决策延后。先吃饭、睡觉、恢复身体，再看卦。",
+    metric: "复盘时看：睡眠、饮食、情绪稳定度、是否能完成一个小动作。",
+  },
+  {
+    key: "relationshipBusiness",
+    words: ["合作", "商家", "客户", "对方", "朋友", "档口", "工厂", "沟通", "授权", "谈"],
+    title: "合作与对方反馈",
+    meaning: "这类问题要重点看应爻。应爻稳定，说明外部反馈可用；应爻空、冲、克，则说明对方或市场暂时不稳。",
+    risk: "最怕只听口头承诺，没有截图、规则和证据。",
+    action: "所有合作先留下文字确认：授权范围、价格、售后、发货、退换。",
+    metric: "复盘时看：对方是否及时回复、是否明确承诺、是否愿意给证据。",
+  },
+  {
+    key: "decision",
+    words: ["要不要", "该不该", "适不适合", "能不能", "是否", "继续", "放弃", "换方向", "选择"],
+    title: "选择与去留",
+    meaning: "选择题不要只看吉凶，要看是否可逆。卦象如果提示可小试，意思不是押上全部，而是先做可撤回的验证。",
+    risk: "最怕把卦当成最终命令，而不是把它当成帮助你拆问题的工具。",
+    action: "把选择拆成A/B两个小测试，各做一个最低成本版本，再比较真实反馈。",
+    metric: "复盘时看：哪个选择带来更低成本、更明确反馈、更少焦虑。",
+  },
+  {
+    key: "timeShort",
+    words: ["今天", "明天", "3天", "三天", "7天", "一周", "短期"],
+    title: "短期判断",
+    meaning: "短期卦主要看当下能不能动、动到什么程度，不适合推导长期成败。",
+    risk: "最怕用三天的结果否定三个月的方向。",
+    action: "只设一个短期验证目标，比如发一篇、问一个人、测一个价格。",
+    metric: "复盘时看短期反馈，不看最终成败。",
+  },
+  {
+    key: "longTerm",
+    words: ["长期", "未来", "三个月", "半年", "一年", "品牌", "人生", "方向"],
+    title: "长期方向",
+    meaning: "长期问题更要看趋势和结构，不要期待一卦给出全部答案。适合用来确定节奏，而不是替代规划。",
+    risk: "最怕目标太大，导致第一步无法开始。",
+    action: "把长期目标拆成最近7天、30天、90天三个层级。",
+    metric: "复盘时看：这周有没有动作，30天有没有数据，90天有没有稳定模型。",
+  },
+];
+
+function matchedContextItems(context) {
+  const text = `${context.situation} ${context.fear} ${context.goal} ${context.timeframe}`;
+  return CONTEXT_LIBRARY.filter((item) => item.words.some((word) => text.includes(word))).slice(0, 4);
+}
+
+function topicSpecificGuidance(topic, context, verdict) {
+  const base = {
+    career: {
+      title: "事业/项目口径",
+      content: "看项目不要只问“能不能成”，而要问“下一步该不该推进”。如果结论是可小试，就适合做内容、问供应商、测价格；如果是先缓一缓，就先补流程和现金流。",
+    },
+    wealth: {
+      title: "钱财/成交口径",
+      content: "问钱财时，重点不是流量多不多，而是成交是否不亏、售后是否可控、用户是否愿意为你的筛选付费。",
+    },
+    relationship: {
+      title: "关系/合作口径",
+      content: "问关系时，别只看对方说什么，要看应爻和现实行动。承诺、授权、价格、售后都要留下文字证据。",
+    },
+    health: {
+      title: "身心状态口径",
+      content: "问身心时，卦象优先用于提醒节奏。如果你已经很累，最好的行动可能不是推进，而是先恢复基本能量。",
+    },
+    decision: {
+      title: "选择题口径",
+      content: "选择题最适合用“可逆测试”处理。不要让卦替你承担最终决定，而是用卦帮你判断先试哪一步。",
+    },
+    general: {
+      title: "综合判断口径",
+      content: "综合问题要先缩小范围。问题越具体，断卦越能落到行动上。",
+    },
+  }[topic];
+  return {
+    ...base,
+    verdictText: verdict.level.includes("推进")
+      ? "当前更偏向可以推进，但要控制投入。"
+      : verdict.level.includes("小试")
+        ? "当前更适合小范围试，不适合直接放大。"
+        : "当前更适合补信息、降风险，再看下一步。",
+  };
+}
+
+function buildContextInsightHtml(topic, context, verdict) {
+  const matched = matchedContextItems(context);
+  const topicGuide = topicSpecificGuidance(topic, context, verdict);
+  const hasContext = contextCompleteness(context) > 0;
+  if (!hasContext) {
+    return `
+      <div class="reading-block">
+        <strong>补充信息建议</strong>
+        <p>如果你想让解读更准，建议补充三件事：你现在的处境、你最担心什么、你想在什么时间范围内判断什么结果。</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="reading-block">
+      <strong>结合补充信息的重点</strong>
+      <p><b>${topicGuide.title}</b>：${topicGuide.content} ${topicGuide.verdictText}</p>
+      ${
+        matched.length
+          ? `<ul>${matched.map((item) => `<li><b>${item.title}</b>：${item.meaning}</li>`).join("")}</ul>`
+          : `<p>你补充的信息还比较宽泛，目前只能按问题类型做判断。可以继续写得更具体，比如价格、成本、时间、对方反馈。</p>`
+      }
+    </div>
+    <div class="reading-block">
+      <strong>可能的坑</strong>
+      <ul>
+        ${
+          matched.length
+            ? matched.map((item) => `<li>${item.risk}</li>`).join("")
+            : `<li>信息不够具体时，最容易把卦象读成泛泛的“好/不好”，这会降低参考价值。</li>`
+        }
+      </ul>
+    </div>
+    <div class="reading-block">
+      <strong>更具体的验证动作</strong>
+      <ol>
+        ${
+          matched.length
+            ? matched.map((item) => `<li>${item.action}</li>`).join("")
+            : `<li>先补充可量化信息：成本、时间、目标、现有反馈、你能承受的最坏结果。</li>`
+        }
+      </ol>
+    </div>
+    <div class="reading-block">
+      <strong>复盘标准</strong>
+      <ul>
+        ${
+          matched.length
+            ? matched.map((item) => `<li>${item.metric}</li>`).join("")
+            : `<li>到你设定的时间范围结束时，记录真实反馈，而不是只记录情绪感受。</li>`
+        }
+      </ul>
+    </div>
+  `;
+}
+
 function getMovingLines(values) {
   return values
     .map((value, index) => ({ value, index }))
@@ -767,6 +940,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
     (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月克") || r.dayEffects.includes("日克")) ? "用神受克，现实阻力偏强，不能只靠意愿推进。" : "",
     (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月生") || r.dayEffects.includes("日生") || r.monthEffects.includes("临月") || r.dayEffects.includes("临日")) ? "用神得生扶，说明并非完全没机会，关键是方式要轻。" : "",
   ].filter(Boolean);
+  const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict);
 
   return {
     tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
@@ -819,6 +993,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
             : `<p>没有看到特别极端的空亡、冲克或多动信号。这不代表一定顺利，只代表卦面没有强烈提示“立刻停手”。</p>`
         }
       </div>
+      ${contextInsightHtml}
       <div class="reading-block">
         <strong>对应这个问题，建议这样做</strong>
         <ol>
