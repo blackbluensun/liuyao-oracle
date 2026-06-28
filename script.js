@@ -209,6 +209,22 @@ const LINE_POSITION_HINTS = {
   5: "上爻动：事情接近一个阶段的顶点，宜收束、复盘或换方式。",
 };
 
+const PLAIN_GLOSSARY = {
+  世爻: "代表你自己、你这边的状态、主动权和承受力。",
+  应爻: "代表对方、市场、外部环境、客户或这件事的另一端。",
+  妻财: "问钱、订单、收入、商品价值时重点看它。",
+  官鬼: "问事业、压力、规则、工作、项目阻力时重点看它。",
+  子孙: "代表缓解、结果、用户反馈、自由度，也常用来看身心放松和产品体验。",
+  父母: "代表资料、合同、证件、学习、规则、平台、房子、信息。",
+  兄弟: "代表竞争、消耗、同类、朋友，也可能代表分走钱财的因素。",
+  空亡: "不是说没有，而是暂时不实、还没落地、像悬在空中，需要等条件补上。",
+  动爻: "正在变化的位置，说明这件事的关键不稳定点在哪里。",
+  回头生: "变化后反过来支持原来的爻，通常代表有补力、有转机。",
+  回头克: "变化后反过来压制原来的爻，通常代表后续压力、反复或代价。",
+  月建: "这段时间的大环境，像天气和季节。",
+  日辰: "起卦当天的力量，像当天的即时状态。",
+};
+
 const HEX_ACTIONS = {
   "乾为天": { score: 2, plain: "主动性强，但容易用力过猛。" },
   "坤为地": { score: 1, plain: "宜顺势、稳住基本盘。" },
@@ -740,6 +756,11 @@ function generateReading({ topic, question, main, changed, values, najia, change
   const useRowsText = (najiaSummary.focusRows || []).length
     ? najiaSummary.focusRows.map((r) => `第${r.index + 1}爻 ${r.spirit}${r.relation}${r.branch}${r.element}${r.empty ? "（空亡）" : ""}`).join("；")
     : "本卦中用神不明显，后续应结合伏神/飞神进一步看。";
+  const simpleUseMeaning = PLAIN_GLOSSARY[najiaSummary.focus] || "这是本次问题最重要的观察点。";
+  const shi = najia.rows.find((r) => r.marks.includes("世"));
+  const ying = najia.rows.find((r) => r.marks.includes("应"));
+  const userSide = shi ? `你这边是第${shi.index + 1}爻，${shi.relation}${shi.branch}${shi.element}${shi.empty ? "，而且落空，说明你现在的状态还不够实、容易没底" : ""}` : "世爻未明";
+  const outsideSide = ying ? `外部/对方是第${ying.index + 1}爻，${ying.relation}${ying.branch}${ying.element}${ying.empty ? "，落空，说明外部反馈暂时不稳定" : ""}` : "应爻未明";
   const riskText = [
     movingLines.length >= 4 ? "动爻多，变量多，说明这件事不适合一下子定死。" : "",
     (najiaSummary.focusRows || []).some((r) => r.empty) ? "用神落空，说明你问的结果暂时还不实，可能要等条件出现。" : "",
@@ -761,17 +782,34 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>如果只看卦象：本卦「${main.name}」表示当前局面——${mainAction.plain}；变卦「${changed.name}」表示后续变化——${changedAction.plain}</p>
       </div>
       <div class="reading-block">
+        <strong>这卦到底在说什么</strong>
+        <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。这次不是让你马上押注，而是提醒你：先看清当前局面，再用小动作验证。</p>
+        <p>${userSide}；${outsideSide}。所以这件事要同时看两边：你有没有承受力，外部有没有真实反馈。</p>
+      </div>
+      <div class="reading-block">
         <strong>为什么这样看</strong>
         <p>上卦为${upper.name}，偏向「${upper.trait}」；下卦为${lower.name}，偏向「${lower.trait}」。${movingDetails}</p>
       </div>
       <div class="reading-block">
         <strong>用神和现实焦点</strong>
-        <p>系统按你的问题自动取用神为「${najiaSummary.focus}」。对应爻：${useRowsText}。</p>
+        <p>系统按你的问题自动取用神为「${najiaSummary.focus}」。简单说，${simpleUseMeaning}</p>
+        <p>对应爻：${useRowsText}。</p>
         <p>${najiaSummary.text}</p>
       </div>
       <div class="reading-block">
         <strong>动变关系</strong>
         <p>${changeText}</p>
+        <p>你可以把动爻理解成“事情正在变化的地方”。如果出现回头生，代表后续有补力；如果出现回头克，代表后续会反过来形成压力。</p>
+      </div>
+      <div class="reading-block">
+        <strong>术语翻译</strong>
+        <ul>
+          <li><b>世爻</b>：${PLAIN_GLOSSARY.世爻}</li>
+          <li><b>应爻</b>：${PLAIN_GLOSSARY.应爻}</li>
+          <li><b>用神</b>：这次问题最该看的那个爻，不同问题看的点不同。</li>
+          <li><b>空亡</b>：${PLAIN_GLOSSARY.空亡}</li>
+          <li><b>月建 / 日辰</b>：${PLAIN_GLOSSARY.月建} ${PLAIN_GLOSSARY.日辰}</li>
+        </ul>
       </div>
       <div class="reading-block">
         <strong>风险点 / 有利点</strong>
