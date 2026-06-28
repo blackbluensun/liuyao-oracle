@@ -889,7 +889,7 @@ function renderProJudgement({ najia, najiaSummary, changeRelations, emptyBranche
   ].join("");
 }
 
-function renderReadingFromCurrentCast() {
+function renderReadingFromCurrentCast(options = {}) {
   if (!currentCast) return;
   const withReading = $("withReading").checked;
   $("readingPanel").classList.toggle("hidden", !withReading);
@@ -908,6 +908,15 @@ function renderReadingFromCurrentCast() {
   });
   $("readingTag").textContent = reading.tag;
   $("readingText").innerHTML = reading.html;
+  if (options.showNotice) {
+    $("readingNotice").classList.remove("hidden");
+    $("readingPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => {
+      $("readingNotice").classList.add("hidden");
+    }, 3500);
+  } else {
+    $("readingNotice").classList.add("hidden");
+  }
 }
 
 function cast() {
@@ -1018,7 +1027,7 @@ function init() {
   $("castDateTime").addEventListener("change", () => {
     if ($("castDateTime").value) syncDateFieldsFromDate(new Date($("castDateTime").value));
   });
-  $("reinterpretBtn").addEventListener("click", renderReadingFromCurrentCast);
+  $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
 }
 
 init();

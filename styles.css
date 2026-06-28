@@ -330,6 +330,16 @@ h3 {
   white-space: nowrap;
 }
 
+.reading-notice {
+  margin: 0 0 16px;
+  border: 1px solid rgba(37, 75, 111, 0.2);
+  border-radius: 16px;
+  padding: 10px 12px;
+  background: rgba(37, 75, 111, 0.08);
+  color: var(--blue-dark);
+  font-size: 14px;
+}
+
 .reading-text {
   display: grid;
   gap: 14px;
