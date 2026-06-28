@@ -10,13 +10,23 @@
     <main class="page">
       <section class="hero">
         <p class="eyebrow">LIU YAO ORACLE</p>
-        <h1>六爻起卦</h1>
+        <h1>问事起卦</h1>
         <p class="subtitle">
-          使用浏览器加密随机数起卦。支持传统三枚铜钱法、四象均衡概率，并提供基础断卦辅助。
+          用六爻做趋势参考。先写问题，再起卦，最后用白话结果看下一步怎么做。
         </p>
+        <div class="steps">
+          <span>1 选择问题</span>
+          <span>2 写清背景</span>
+          <span>3 查看建议</span>
+        </div>
       </section>
 
       <section class="panel controls">
+        <div class="section-title">
+          <p class="label">STEP 1</p>
+          <h3>你想问什么？</h3>
+        </div>
+
         <label class="field">
           <span>起卦方式</span>
           <select id="mode">
@@ -34,13 +44,68 @@
             <option value="relationship">感情 / 合作 / 人际</option>
             <option value="health">身心状态 / 压力</option>
             <option value="decision">选择 / 去留 / 是否行动</option>
+            <option value="lost">找失物</option>
           </select>
         </label>
 
         <label class="field">
           <span>所问之事（可选）</span>
-          <textarea id="question" rows="3" placeholder="例如：我现在做 LINO 童装选品，接下来一周该如何推进？"></textarea>
+          <textarea id="question" rows="3" placeholder="例如：我想换工作，接下来一个月适不适合投简历？"></textarea>
         </label>
+
+        <section id="lostFields" class="lost-fields hidden">
+          <div class="section-title compact">
+            <p class="label">LOST ITEM</p>
+            <h3>找失物信息</h3>
+          </div>
+          <div class="context-grid">
+            <label class="field">
+              <span>丢的是什么？</span>
+              <input id="lostItem" type="text" placeholder="例如：钥匙、身份证、耳机、戒指、猫、钱包" />
+            </label>
+            <label class="field">
+              <span>最后一次看到在哪里？</span>
+              <input id="lostLastSeen" type="text" placeholder="例如：卧室桌上、公司工位、出租车、商场" />
+            </label>
+            <label class="field">
+              <span>大概什么时候不见的？</span>
+              <input id="lostTime" type="text" placeholder="例如：今天上午、昨晚、三天前、刚刚出门后" />
+            </label>
+            <label class="field">
+              <span>场景</span>
+              <select id="lostScene">
+                <option value="不确定">不确定</option>
+                <option value="家里">家里</option>
+                <option value="公司/学校">公司/学校</option>
+                <option value="路上">路上</option>
+                <option value="车上/交通工具">车上/交通工具</option>
+                <option value="店里/商场">店里/商场</option>
+                <option value="公共场所">公共场所</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>材质/类型</span>
+              <select id="lostMaterial">
+                <option value="不确定">不确定</option>
+                <option value="金属/钥匙/首饰">金属/钥匙/首饰</option>
+                <option value="证件/纸张/文件">证件/纸张/文件</option>
+                <option value="电子产品">电子产品</option>
+                <option value="衣物/包包">衣物/包包</option>
+                <option value="钱财/卡片">钱财/卡片</option>
+                <option value="宠物/活物">宠物/活物</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>是否可能被别人接触过？</span>
+              <select id="lostTouched">
+                <option value="不确定">不确定</option>
+                <option value="没有，应该是自己放忘了">没有，应该是自己放忘了</option>
+                <option value="可能有别人碰过">可能有别人碰过</option>
+                <option value="很可能在别人那里">很可能在别人那里</option>
+              </select>
+            </label>
+          </div>
+        </section>
 
         <label class="field">
           <span>起卦时间</span>
@@ -81,6 +146,18 @@
       </section>
 
       <section id="result" class="result hidden">
+        <article id="readingPanel" class="panel reading">
+          <div class="reading-head">
+            <div>
+              <p class="label">RESULT</p>
+              <h3>先看结论</h3>
+            </div>
+            <p id="readingTag" class="reading-tag">—</p>
+          </div>
+          <p id="readingNotice" class="reading-notice hidden">已根据补充信息更新解读</p>
+          <div id="readingText" class="reading-text"></div>
+        </article>
+
         <div class="result-grid">
           <article class="panel hex-card">
             <div class="card-head">
@@ -99,18 +176,6 @@
           </article>
         </div>
 
-        <article id="readingPanel" class="panel reading">
-          <div class="reading-head">
-            <div>
-              <p class="label">BASIC READING</p>
-              <h3>白话断卦</h3>
-            </div>
-            <p id="readingTag" class="reading-tag">—</p>
-          </div>
-          <p id="readingNotice" class="reading-notice hidden">已根据补充信息更新解读</p>
-          <div id="readingText" class="reading-text"></div>
-        </article>
-
         <article class="panel details">
           <h3>补充信息，让断卦更贴题</h3>
           <p class="note">
@@ -119,15 +184,15 @@
           <div class="context-grid">
             <label class="field">
               <span>你现在的真实处境</span>
-              <textarea id="contextSituation" rows="3" placeholder="例如：我裸辞了，存款不多，正在做童装小红书选品，还没有成交。"></textarea>
+              <textarea id="contextSituation" rows="3" placeholder="例如：我最近在换工作/感情冷淡/钱有压力/东西找不到，事情已经持续几天了。"></textarea>
             </label>
             <label class="field">
               <span>你最担心什么</span>
-              <textarea id="contextFear" rows="3" placeholder="例如：怕卖不出去、怕亏钱、怕供应链出问题、怕自己坚持不下去。"></textarea>
+              <textarea id="contextFear" rows="3" placeholder="例如：怕选错、怕被骗、怕关系变差、怕找不回来、怕继续拖下去。"></textarea>
             </label>
             <label class="field">
               <span>你最想判断的结果</span>
-              <textarea id="contextGoal" rows="3" placeholder="例如：接下来7天要不要继续发这款？要不要定49包邮？要不要换方向？"></textarea>
+              <textarea id="contextGoal" rows="3" placeholder="例如：接下来7天要不要行动？对方会不会回应？东西大概在哪？这个选择能不能试？"></textarea>
             </label>
             <label class="field">
               <span>时间范围</span>
@@ -145,22 +210,23 @@
           </div>
         </article>
 
-        <article class="panel details">
-          <h3>起卦结果</h3>
-          <div id="meta" class="meta"></div>
-          <div id="lines" class="lines"></div>
-        </article>
-
-        <article class="panel details">
-          <h3>纳甲排盘</h3>
-          <div id="najiaMeta" class="meta"></div>
-          <div id="najiaTable" class="najia-table"></div>
-        </article>
-
-        <article class="panel details">
-          <h3>专业判断</h3>
-          <div id="proJudgement" class="pro-list"></div>
-        </article>
+        <details class="panel details pro-details">
+          <summary>查看专业排盘与原始结果</summary>
+          <div class="sub-section">
+            <h3>起卦结果</h3>
+            <div id="meta" class="meta"></div>
+            <div id="lines" class="lines"></div>
+          </div>
+          <div class="sub-section">
+            <h3>纳甲排盘</h3>
+            <div id="najiaMeta" class="meta"></div>
+            <div id="najiaTable" class="najia-table"></div>
+          </div>
+          <div class="sub-section">
+            <h3>专业判断</h3>
+            <div id="proJudgement" class="pro-list"></div>
+          </div>
+        </details>
 
         <article class="panel explanation">
           <h3>概率说明</h3>

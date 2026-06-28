@@ -146,6 +146,12 @@ const TOPIC_TEXT = {
     go: "可试探性行动，先做可逆的小选择。",
     wait: "暂缓最终决定，先补信息和备选方案。",
   },
+  lost: {
+    name: "找失物",
+    focus: "重点看物品是否还近、是否被移动、在哪类环境里。",
+    go: "适合按线索分区寻找，先找近处和遮挡处。",
+    wait: "先回忆最后出现地点，不要盲目扩大搜索范围。",
+  },
 };
 
 const QUESTION_PATTERNS = [
@@ -197,6 +203,13 @@ const QUESTION_PATTERNS = [
     intent: "判断去留行动",
     good: "适合先踩点或做可撤回的短行动。",
     bad: "暂缓最终决定，先确认成本、路线和后路。",
+  },
+  {
+    key: "lost",
+    patterns: ["丢", "丢了", "不见", "找不到", "失物", "遗失", "掉了", "落下", "钥匙", "钱包", "证件", "耳机"],
+    intent: "寻找失物",
+    good: "重点看东西是否还在附近、有没有被移动、该先找哪里。",
+    bad: "不要只靠卦象，先回到最后一次出现地点复盘行动路线。",
   },
 ];
 
@@ -536,6 +549,7 @@ function buildNajia(hex, lines, values, dayStem, monthBranch, dayBranch, emptyBr
 }
 
 function relationFocusByTopic(topic, analysis) {
+  if (topic === "lost" || analysis?.matchedKeys.includes("lost")) return "妻财";
   if (analysis?.matchedKeys.includes("sell") || analysis?.matchedKeys.includes("money")) return "妻财";
   if (analysis?.matchedKeys.includes("business")) return "官鬼";
   if (analysis?.matchedKeys.includes("emotion")) return "子孙";
@@ -546,6 +560,7 @@ function relationFocusByTopic(topic, analysis) {
     relationship: "应爻",
     health: "子孙",
     decision: "世爻",
+    lost: "妻财",
     general: "世爻",
   }[topic] || "世爻";
 }
@@ -667,11 +682,20 @@ function readUserContext() {
     fear: $("contextFear")?.value.trim() || "",
     goal: $("contextGoal")?.value.trim() || "",
     timeframe: $("contextTimeframe")?.value || "7天内",
+    lost: {
+      item: $("lostItem")?.value.trim() || "",
+      lastSeen: $("lostLastSeen")?.value.trim() || "",
+      time: $("lostTime")?.value.trim() || "",
+      scene: $("lostScene")?.value || "",
+      material: $("lostMaterial")?.value || "",
+      touched: $("lostTouched")?.value || "",
+    },
   };
 }
 
 function contextCompleteness(context) {
-  return [context.situation, context.fear, context.goal].filter(Boolean).length;
+  const lostCount = context.lost ? [context.lost.item, context.lost.lastSeen, context.lost.time].filter(Boolean).length : 0;
+  return [context.situation, context.fear, context.goal].filter(Boolean).length + lostCount;
 }
 
 const CONTEXT_LIBRARY = [
@@ -1044,6 +1068,103 @@ function buildContextInsightHtml(topic, context, verdict) {
   `;
 }
 
+const TRIGRAM_DIRECTIONS = {
+  7: "西北",
+  0: "西南",
+  1: "正东",
+  6: "东南",
+  2: "正北",
+  5: "正南",
+  4: "东北",
+  3: "正西",
+};
+
+const SPIRIT_LOST_HINTS = {
+  青龙: ["衣物、装饰物附近", "干净明亮的位置", "包、礼盒、漂亮物件旁"],
+  朱雀: ["桌面、书本、文件、电脑旁", "说话/办公/学习的位置", "手机、充电器、纸张附近"],
+  勾陈: ["角落、地面、杂物堆", "柜子、箱子、旧物旁", "被压住或被收起来的位置"],
+  腾蛇: ["袋子、线材、缠绕物附近", "夹层、缝隙、复杂隐蔽处", "容易看漏的位置"],
+  白虎: ["金属物、工具、车、硬物旁", "门口、钥匙、刀具、运动用品附近", "容易磕碰的位置"],
+  玄武: ["暗处、床下、卫生间、水边", "黑色包、抽屉深处", "被遮挡、不显眼的位置"],
+};
+
+const ELEMENT_LOST_HINTS = {
+  木: ["木柜、书架、衣架、植物旁", "纸箱、书本、木质家具附近"],
+  火: ["电器、灯、厨房、热源附近", "电脑、充电器、插座、亮处"],
+  土: ["地面、墙角、箱子、杂物堆", "柜子底部、收纳盒、包裹旁"],
+  金: ["抽屉、金属物、钥匙、工具、车内", "白色/金属色物品附近"],
+  水: ["卫生间、洗手台、水杯、冰箱旁", "潮湿处、黑暗处、低处"],
+};
+
+function lostMaterialHints(material) {
+  if (!material || material === "不确定") return [];
+  if (material.includes("金属")) return ["按物品材质，优先找钥匙盘、抽屉、包侧袋、车内、金属物附近。"];
+  if (material.includes("证件")) return ["按物品类型，优先找文件袋、桌面、书本夹层、包内夹层、复印/办事地点。"];
+  if (material.includes("电子")) return ["按物品类型，优先找充电处、床边、桌面、沙发缝、包里、外套口袋。"];
+  if (material.includes("衣物")) return ["按物品类型，优先找衣柜、洗衣篮、床边、包里、换衣服的位置。"];
+  if (material.includes("钱财")) return ["按物品类型，优先找钱包、卡包、裤袋、外套口袋、付款地点、包夹层。"];
+  if (material.includes("宠物")) return ["如果是宠物，先查门口、楼道、阳台、床下、柜底、安静暗处，并及时询问邻居和物业。"];
+  return [];
+}
+
+function buildLostItemReading({ main, najia, najiaSummary, changeRelations, userContext }) {
+  const lost = userContext.lost || {};
+  const caiRows = najia.rows.filter((r) => r.relation === "妻财");
+  const primary = caiRows.find((r) => r.marks.includes("动")) || caiRows.find((r) => r.marks.includes("世")) || caiRows[0];
+  if (!primary) return "";
+
+  let score = 2;
+  if (primary.empty) score -= 1;
+  if (primary.monthEffects.includes("月克") || primary.dayEffects.includes("日克")) score -= 1;
+  if (primary.monthEffects.includes("月冲") || primary.dayEffects.includes("日冲")) score -= 1;
+  if (primary.monthEffects.includes("月生") || primary.dayEffects.includes("日生") || primary.monthEffects.includes("临月") || primary.dayEffects.includes("临日")) score += 1;
+  if (primary.marks.includes("世")) score += 1;
+  if (primary.marks.includes("应")) score -= 0.5;
+  const probability = score >= 3 ? "较高" : score >= 1.5 ? "中等" : "偏低，需要扩大搜索或问人";
+
+  const distance = primary.marks.includes("世")
+    ? "更像还在自己身边、家里、包里、衣物口袋或自己常活动的位置"
+    : primary.marks.includes("应")
+      ? "更像在外部环境、别人手边、公共区域或最后接触地点附近"
+      : primary.empty
+        ? "暂时看不见，可能被遮挡、夹住、收纳起来，或要等一等才显现"
+        : "不算特别远，先从最后出现地点向外扩散寻找";
+
+  const direction = TRIGRAM_DIRECTIONS[primary.index < 3 ? main.lower : main.upper] || "不明";
+  const spiritHints = SPIRIT_LOST_HINTS[primary.spirit] || [];
+  const elementHints = ELEMENT_LOST_HINTS[primary.element] || [];
+  const materialHints = lostMaterialHints(lost.material);
+  const change = changeRelations.find((item) => item.index === primary.index);
+  const changeHint = change
+    ? `财爻发动，物品有被移动的象。动变为「${change.relation}」，${change.relation === "回头克" ? "后续找回阻力增加，建议尽快查最后接触点。" : change.relation === "回头生" ? "后续有转机，可以沿着线索继续找。" : "说明位置或状态发生变化。"}`
+    : "财爻不动，更像东西没有走远，先找固定位置、收纳处和最后出现地点。";
+
+  const sceneHint = lost.scene && lost.scene !== "不确定" ? `你填写的场景是「${lost.scene}」，先不要跳出这个范围太远。` : "你没有明确场景，建议先从最后一次见到的地点开始。";
+  const touchedHint = lost.touched && lost.touched.includes("别人")
+    ? "你提到可能有人接触过，建议询问同住人、同事、店员、司机或最近接触的人。"
+    : "暂时先按自己遗落或收纳忘记处理。";
+
+  const searchSteps = [
+    lost.lastSeen ? `第一轮：回到「${lost.lastSeen}」附近，按顺时针找桌面、地面、柜边、包里、口袋。` : "第一轮：回到最后出现地点，先找桌面、地面、包里、口袋和角落。",
+    `第二轮：看${direction}方向，尤其是${[...spiritHints, ...elementHints].slice(0, 3).join("、")}。`,
+    materialHints[0] || "第三轮：按物品类型找同类物附近，比如证件找文件，电子产品找充电处，钥匙找门口和包。",
+    touchedHint,
+  ];
+
+  return `
+    <div class="reading-block lost-reading">
+      <strong>失物线索</strong>
+      <p>你要找的是：<b>${lost.item || "未填写物品"}</b>。找回倾向：<b>${probability}</b>。</p>
+      <p><b>远近判断：</b>${distance}。${sceneHint}</p>
+      <p><b>方向提示：</b>${direction}方向可重点看，但不要机械理解成只找一个方向，它更像提醒你优先排查的区域。</p>
+      <p><b>环境提示：</b>${[...spiritHints, ...elementHints, ...materialHints].slice(0, 6).join("；") || "先从最后出现地点和常用收纳处找起。"}。</p>
+      <p><b>动变提示：</b>${changeHint}</p>
+      <p><b>建议寻找顺序：</b></p>
+      <ol>${searchSteps.map((s) => `<li>${s}</li>`).join("")}</ol>
+    </div>
+  `;
+}
+
 function getMovingLines(values) {
   return values
     .map((value, index) => ({ value, index }))
@@ -1138,6 +1259,9 @@ function generateReading({ topic, question, main, changed, values, najia, change
     (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月生") || r.dayEffects.includes("日生") || r.monthEffects.includes("临月") || r.dayEffects.includes("临日")) ? "用神得生扶，说明并非完全没机会，关键是方式要轻。" : "",
   ].filter(Boolean);
   const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict);
+  const lostHtml = topic === "lost"
+    ? buildLostItemReading({ main, najia, najiaSummary, changeRelations, userContext })
+    : "";
 
   return {
     tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
@@ -1154,9 +1278,10 @@ function generateReading({ topic, question, main, changed, values, najia, change
       </div>
       <div class="reading-block">
         <strong>这卦到底在说什么</strong>
-        <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。这次不是让你马上押注，而是提醒你：先看清当前局面，再用小动作验证。</p>
-        <p>${userSide}；${outsideSide}。所以这件事要同时看两边：你有没有承受力，外部有没有真实反馈。</p>
+        <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。${topic === "lost" ? "找失物时，重点不是问玄不玄，而是把卦象转成寻找路线。" : "这次不是让你马上押注，而是提醒你：先看清当前局面，再用小动作验证。"}</p>
+        <p>${userSide}；${outsideSide}。所以这件事要同时看两边：${topic === "lost" ? "物品更像在自己控制范围内，还是已经进入外部环境。" : "你有没有承受力，外部有没有真实反馈。"}</p>
       </div>
+      ${lostHtml}
       <div class="reading-block">
         <strong>为什么这样看</strong>
         <p>上卦为${upper.name}，偏向「${upper.trait}」；下卦为${lower.name}，偏向「${lower.trait}」。${movingDetails}</p>
@@ -1291,6 +1416,16 @@ function renderReadingFromCurrentCast(options = {}) {
   }
 }
 
+function updateTopicUI() {
+  const isLost = $("topic").value === "lost";
+  $("lostFields").classList.toggle("hidden", !isLost);
+  if (isLost && !$("question").value.trim()) {
+    $("question").placeholder = "例如：我的钥匙不见了，想知道大概在哪里、还能不能找回？";
+  } else if (!isLost) {
+    $("question").placeholder = "例如：我想换工作，接下来一个月适不适合投简历？";
+  }
+}
+
 function cast() {
   const mode = $("mode").value;
   const topic = $("topic").value;
@@ -1399,7 +1534,9 @@ function init() {
   $("castDateTime").addEventListener("change", () => {
     if ($("castDateTime").value) syncDateFieldsFromDate(new Date($("castDateTime").value));
   });
+  $("topic").addEventListener("change", updateTopicUI);
   $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
+  updateTopicUI();
 }
 
 init();
