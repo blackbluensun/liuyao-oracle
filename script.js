@@ -1,0 +1,986 @@
+const TRIGRAMS = {
+  0: { name: "坤", nature: "地", trait: "承载、稳定、顺势" },
+  1: { name: "震", nature: "雷", trait: "启动、变化、惊动" },
+  2: { name: "坎", nature: "水", trait: "风险、流动、压力" },
+  3: { name: "兑", nature: "泽", trait: "沟通、喜悦、交易" },
+  4: { name: "艮", nature: "山", trait: "停止、边界、蓄力" },
+  5: { name: "离", nature: "火", trait: "曝光、表达、依附" },
+  6: { name: "巽", nature: "风", trait: "渗透、传播、进入" },
+  7: { name: "乾", nature: "天", trait: "主动、创造、强势" },
+};
+
+const HEXAGRAM_NAMES = {
+  7: { 7: "乾为天", 0: "天地否", 1: "天雷无妄", 2: "天水讼", 4: "天山遁", 5: "天火同人", 6: "天风姤", 3: "天泽履" },
+  0: { 7: "地天泰", 0: "坤为地", 1: "地雷复", 2: "地水师", 4: "地山谦", 5: "地火明夷", 6: "地风升", 3: "地泽临" },
+  1: { 7: "雷天大壮", 0: "雷地豫", 1: "震为雷", 2: "雷水解", 4: "雷山小过", 5: "雷火丰", 6: "雷风恒", 3: "雷泽归妹" },
+  2: { 7: "水天需", 0: "水地比", 1: "水雷屯", 2: "坎为水", 4: "水山蹇", 5: "水火既济", 6: "水风井", 3: "水泽节" },
+  4: { 7: "山天大畜", 0: "山地剥", 1: "山雷颐", 2: "山水蒙", 4: "艮为山", 5: "山火贲", 6: "山风蛊", 3: "山泽损" },
+  5: { 7: "火天大有", 0: "火地晋", 1: "火雷噬嗑", 2: "火水未济", 4: "火山旅", 5: "离为火", 6: "火风鼎", 3: "火泽睽" },
+  6: { 7: "风天小畜", 0: "风地观", 1: "风雷益", 2: "风水涣", 4: "风山渐", 5: "风火家人", 6: "巽为风", 3: "风泽中孚" },
+  3: { 7: "泽天夬", 0: "泽地萃", 1: "泽雷随", 2: "泽水困", 4: "泽山咸", 5: "泽火革", 6: "泽风大过", 3: "兑为泽" },
+};
+
+const LINE_LABEL = {
+  6: "老阴（变爻）",
+  7: "少阳",
+  8: "少阴",
+  9: "老阳（变爻）",
+};
+
+const STEMS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
+const BRANCHES = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
+
+const BRANCH_ELEMENT = {
+  子: "水", 亥: "水",
+  寅: "木", 卯: "木",
+  巳: "火", 午: "火",
+  申: "金", 酉: "金",
+  辰: "土", 戌: "土", 丑: "土", 未: "土",
+};
+
+const ELEMENT_GENERATES = { 木: "火", 火: "土", 土: "金", 金: "水", 水: "木" };
+const ELEMENT_CONTROLS = { 木: "土", 土: "水", 水: "火", 火: "金", 金: "木" };
+const BRANCH_OPPOSITE = {
+  子: "午", 午: "子",
+  丑: "未", 未: "丑",
+  寅: "申", 申: "寅",
+  卯: "酉", 酉: "卯",
+  辰: "戌", 戌: "辰",
+  巳: "亥", 亥: "巳",
+};
+
+const NAGAN_BRANCHES = {
+  7: { inner: ["子", "寅", "辰"], outer: ["午", "申", "戌"] }, // 乾
+  0: { inner: ["未", "巳", "卯"], outer: ["丑", "亥", "酉"] }, // 坤
+  1: { inner: ["子", "寅", "辰"], outer: ["午", "申", "戌"] }, // 震
+  6: { inner: ["丑", "亥", "酉"], outer: ["未", "巳", "卯"] }, // 巽
+  2: { inner: ["寅", "辰", "午"], outer: ["申", "戌", "子"] }, // 坎
+  5: { inner: ["卯", "丑", "亥"], outer: ["酉", "未", "巳"] }, // 离
+  4: { inner: ["辰", "午", "申"], outer: ["戌", "子", "寅"] }, // 艮
+  3: { inner: ["巳", "卯", "丑"], outer: ["亥", "酉", "未"] }, // 兑
+};
+
+const PALACES = [
+  { palace: "乾宫", element: "金", names: ["乾为天", "天风姤", "天山遁", "天地否", "风地观", "山地剥", "火地晋", "火天大有"] },
+  { palace: "兑宫", element: "金", names: ["兑为泽", "泽水困", "泽地萃", "泽山咸", "水山蹇", "地山谦", "雷山小过", "雷泽归妹"] },
+  { palace: "离宫", element: "火", names: ["离为火", "火山旅", "火风鼎", "火水未济", "山水蒙", "风水涣", "天水讼", "天火同人"] },
+  { palace: "震宫", element: "木", names: ["震为雷", "雷地豫", "雷水解", "雷风恒", "地风升", "水风井", "泽风大过", "泽雷随"] },
+  { palace: "巽宫", element: "木", names: ["巽为风", "风天小畜", "风火家人", "风雷益", "天雷无妄", "火雷噬嗑", "山雷颐", "山风蛊"] },
+  { palace: "坎宫", element: "水", names: ["坎为水", "水泽节", "水雷屯", "水火既济", "泽火革", "雷火丰", "地火明夷", "地水师"] },
+  { palace: "艮宫", element: "土", names: ["艮为山", "山火贲", "山天大畜", "山泽损", "火泽睽", "天泽履", "风泽中孚", "风山渐"] },
+  { palace: "坤宫", element: "土", names: ["坤为地", "地雷复", "地泽临", "地天泰", "雷天大壮", "泽天夬", "水天需", "水地比"] },
+];
+
+const PALACE_INDEX = (() => {
+  const out = {};
+  const shiByOrder = [6, 1, 2, 3, 4, 5, 4, 3];
+  for (const group of PALACES) {
+    group.names.forEach((name, order) => {
+      const shi = shiByOrder[order];
+      out[name] = {
+        palace: group.palace,
+        palaceElement: group.element,
+        order,
+        kind: order === 6 ? "游魂" : order === 7 ? "归魂" : order === 0 ? "本宫" : `${order}世卦`,
+        shi,
+        ying: ((shi + 2) % 6) + 1,
+      };
+    });
+  }
+  return out;
+})();
+
+const SIX_SPIRITS = ["青龙", "朱雀", "勾陈", "腾蛇", "白虎", "玄武"];
+const SIX_SPIRIT_START = {
+  甲: 0, 乙: 0,
+  丙: 1, 丁: 1,
+  戊: 2,
+  己: 3,
+  庚: 4, 辛: 4,
+  壬: 5, 癸: 5,
+};
+
+const EMPTY_BY_XUN = [
+  { start: "甲子", empty: ["戌", "亥"] },
+  { start: "甲戌", empty: ["申", "酉"] },
+  { start: "甲申", empty: ["午", "未"] },
+  { start: "甲午", empty: ["辰", "巳"] },
+  { start: "甲辰", empty: ["寅", "卯"] },
+  { start: "甲寅", empty: ["子", "丑"] },
+];
+
+const TOPIC_TEXT = {
+  general: {
+    name: "综合判断",
+    focus: "先看大趋势，再看当下是否适合推进。",
+    go: "可以小步推进，但要保留回旋空间。",
+    wait: "先稳住局面，不宜急着扩大动作。",
+  },
+  career: {
+    name: "事业 / 创业 / 项目",
+    focus: "重点看项目节奏、资源是否跟得上、是否适合扩张。",
+    go: "适合做低成本试错，先拿反馈，不要一次投入太重。",
+    wait: "先补流程、现金流和合作规则，不宜贸然加码。",
+  },
+  wealth: {
+    name: "钱财 / 成交 / 收入",
+    focus: "重点看现金流、成交阻力、价格和风险控制。",
+    go: "可以试成交，但要控制成本、先收小单。",
+    wait: "先算清成本和售后，不要为了成交而亏损。",
+  },
+  relationship: {
+    name: "感情 / 合作 / 人际",
+    focus: "重点看沟通、信任、边界和双方是否同频。",
+    go: "可以主动沟通，但话要说清楚，避免误会。",
+    wait: "先观察对方真实态度，不要急着绑定关系。",
+  },
+  health: {
+    name: "身心状态 / 压力",
+    focus: "重点看消耗、恢复、节奏和是否需要暂停。",
+    go: "可以做轻量行动，但不要硬扛。",
+    wait: "先休息、吃饭、睡眠，身体稳定后再判断。",
+  },
+  decision: {
+    name: "选择 / 去留 / 是否行动",
+    focus: "重点看当下是否适合动，以及动到什么程度。",
+    go: "可试探性行动，先做可逆的小选择。",
+    wait: "暂缓最终决定，先补信息和备选方案。",
+  },
+};
+
+const QUESTION_PATTERNS = [
+  {
+    key: "canDo",
+    patterns: ["能不能", "可不可以", "可以吗", "适合吗", "要不要", "是否", "该不该"],
+    intent: "判断是否适合行动",
+    good: "适合先做低风险试探，不宜直接押大。",
+    bad: "不适合马上硬做，先补信息或降低动作。",
+  },
+  {
+    key: "sell",
+    patterns: ["卖", "成交", "下单", "客户", "买", "价格", "定价", "订单"],
+    intent: "判断成交与钱财",
+    good: "重点看能不能产生真实询单和小额成交。",
+    bad: "重点防止为了成交牺牲利润或售后失控。",
+  },
+  {
+    key: "business",
+    patterns: ["创业", "项目", "品牌", "账号", "小红书", "抖音", "选品", "供应链", "一件代发"],
+    intent: "判断项目推进",
+    good: "适合用内容和小样本测试推进。",
+    bad: "不适合一口气做重资产或长期承诺。",
+  },
+  {
+    key: "money",
+    patterns: ["钱", "存款", "收入", "房租", "成本", "利润", "现金流", "亏"],
+    intent: "判断现金压力",
+    good: "可做小额现金流尝试，但要先算账。",
+    bad: "先保现金，不要因为焦虑而花钱解决焦虑。",
+  },
+  {
+    key: "emotion",
+    patterns: ["焦虑", "崩溃", "害怕", "压力", "撑不住", "摆烂", "精神", "睡不着"],
+    intent: "判断身心状态",
+    good: "可以做一点轻动作恢复掌控感。",
+    bad: "先暂停决策，恢复睡眠、饮食和基本节奏。",
+  },
+  {
+    key: "relationship",
+    patterns: ["合作", "朋友", "对象", "感情", "他", "她", "对方", "沟通"],
+    intent: "判断关系互动",
+    good: "可以沟通，但要明确边界和条件。",
+    bad: "先观察对方行动，不要只听承诺。",
+  },
+  {
+    key: "move",
+    patterns: ["搬家", "租房", "去", "留下", "广州", "深圳", "换房", "出发"],
+    intent: "判断去留行动",
+    good: "适合先踩点或做可撤回的短行动。",
+    bad: "暂缓最终决定，先确认成本、路线和后路。",
+  },
+];
+
+const LINE_POSITION_HINTS = {
+  0: "初爻动：问题刚开始，先看基础条件，不要急着看结果。",
+  1: "二爻动：适合从内部调整，比如流程、准备、价格、沟通方式。",
+  2: "三爻动：容易卡在执行层，别一边焦虑一边硬推。",
+  3: "四爻动：外部关系开始影响结果，要看合作、平台、客户反馈。",
+  4: "五爻动：关键决策位动，适合定策略，但要避免一念之间押太重。",
+  5: "上爻动：事情接近一个阶段的顶点，宜收束、复盘或换方式。",
+};
+
+const HEX_ACTIONS = {
+  "乾为天": { score: 2, plain: "主动性强，但容易用力过猛。" },
+  "坤为地": { score: 1, plain: "宜顺势、稳住基本盘。" },
+  "水雷屯": { score: -1, plain: "刚开始会乱，先解决最小阻塞。" },
+  "山水蒙": { score: -1, plain: "信息不足，先问清楚、学明白。" },
+  "水天需": { score: 0, plain: "需要等待条件成熟，不是不能做。" },
+  "天水讼": { score: -2, plain: "容易有争执或规则问题，先写清边界。" },
+  "地水师": { score: 0, plain: "需要纪律和组织，别靠情绪推进。" },
+  "水地比": { score: 1, plain: "适合找支持、找同伴或找靠谱资源。" },
+  "风天小畜": { score: 0, plain: "有积累但还小，先蓄力。" },
+  "天泽履": { score: -1, plain: "能走，但脚下有风险，要谨慎。" },
+  "地天泰": { score: 2, plain: "上下通畅，适合稳步推进。" },
+  "天地否": { score: -2, plain: "当下不通，先找堵点。" },
+  "天火同人": { score: 1, plain: "适合找同频的人或用户。" },
+  "火天大有": { score: 2, plain: "资源感较强，但要守住边界。" },
+  "地山谦": { score: 1, plain: "低调务实反而有利。" },
+  "雷地豫": { score: 1, plain: "有期待和动能，但别飘。" },
+  "泽雷随": { score: 1, plain: "跟着反馈走，适合顺势调整。" },
+  "山风蛊": { score: -1, plain: "有旧问题要修，不修会拖后腿。" },
+  "地泽临": { score: 1, plain: "机会靠近，适合试探。" },
+  "风地观": { score: 0, plain: "先观察市场或对方反应。" },
+  "火雷噬嗑": { score: 0, plain: "有阻塞，但可通过规则解决。" },
+  "山火贲": { score: 1, plain: "包装和呈现很重要，但不能只看表面。" },
+  "山地剥": { score: -2, plain: "消耗偏大，先止损。" },
+  "地雷复": { score: 1, plain: "有重新开始的机会，适合小步恢复。" },
+  "天雷无妄": { score: 0, plain: "不要妄动，按真实条件做事。" },
+  "山天大畜": { score: 1, plain: "先积累能力，不急着放大。" },
+  "山雷颐": { score: 0, plain: "先养人、养内容、养基本盘。" },
+  "泽风大过": { score: -2, plain: "压力过载，必须减重。" },
+  "坎为水": { score: -2, plain: "风险和压力较多，先控风险。" },
+  "离为火": { score: 1, plain: "利曝光表达，但容易焦躁。" },
+  "泽山咸": { score: 1, plain: "有吸引和互动，适合测试反应。" },
+  "雷风恒": { score: 1, plain: "贵在持续，不要频繁换方向。" },
+  "天山遁": { score: -1, plain: "退一步保实力，不是失败。" },
+  "雷天大壮": { score: 1, plain: "动能强，但忌莽撞。" },
+  "火地晋": { score: 2, plain: "有被看见、上升的机会。" },
+  "地火明夷": { score: -1, plain: "暂时不容易被看见，先保护自己。" },
+  "风火家人": { score: 1, plain: "内部流程和日常秩序最关键。" },
+  "火泽睽": { score: -1, plain: "认知分歧明显，先求小同。" },
+  "水山蹇": { score: -2, plain: "路不顺，先避开最难的点。" },
+  "雷水解": { score: 1, plain: "阻力有解，适合拆问题。" },
+  "山泽损": { score: -1, plain: "要做减法，少做一点反而对。" },
+  "风雷益": { score: 2, plain: "有增益，适合传播和借力。" },
+  "泽天夬": { score: 0, plain: "需要决断，但别情绪化切断。" },
+  "天风姤": { score: 0, plain: "有偶遇机会，也有不稳定因素。" },
+  "泽地萃": { score: 1, plain: "适合集聚人气、资源和反馈。" },
+  "地风升": { score: 2, plain: "慢慢上升，适合长期积累。" },
+  "泽水困": { score: -2, plain: "受困，先保现金和精力。" },
+  "水风井": { score: 1, plain: "有资源，但要用对方式。" },
+  "泽火革": { score: 1, plain: "适合改变旧模式。" },
+  "火风鼎": { score: 2, plain: "适合重组资源，做出新结构。" },
+  "震为雷": { score: 0, plain: "变化突然，先稳住。" },
+  "艮为山": { score: -1, plain: "该停就停，先设边界。" },
+  "风山渐": { score: 1, plain: "渐进最有利，不要一步到位。" },
+  "雷泽归妹": { score: -1, plain: "关系或合作不稳定，别急定局。" },
+  "雷火丰": { score: 1, plain: "热度和信息多，防过热。" },
+  "火山旅": { score: 0, plain: "不安定，适合轻装试行。" },
+  "巽为风": { score: 1, plain: "适合传播、渗透、慢慢进入。" },
+  "兑为泽": { score: 1, plain: "利沟通成交，但别承诺过度。" },
+  "风水涣": { score: -1, plain: "散乱，需要重新聚焦。" },
+  "水泽节": { score: 0, plain: "要节制、限额、定规则。" },
+  "风泽中孚": { score: 1, plain: "重信任，真诚比技巧重要。" },
+  "雷山小过": { score: 0, plain: "小事可行，大事谨慎。" },
+  "水火既济": { score: 1, plain: "阶段可成，但别松懈。" },
+  "火水未济": { score: 0, plain: "还没完成，继续调整。" },
+};
+
+const HEX_HINTS = {
+  "乾为天": "气势强，适合主动开局，但忌硬冲硬撑。",
+  "坤为地": "宜顺势承接，先稳基础，不宜急求结果。",
+  "水雷屯": "初创多阻，先破混乱，适合小步开荒。",
+  "山水蒙": "信息未明，先学习、问清、验证。",
+  "水天需": "需要等待条件成熟，急反而乱。",
+  "天水讼": "有争执或规则问题，先把边界写清楚。",
+  "地水师": "需要组织和纪律，别散乱行动。",
+  "水地比": "利于结伴、找支持，但要选对人。",
+  "风天小畜": "有积累但未成势，适合蓄小力。",
+  "天泽履": "踩在风险边缘，谨慎守礼可过。",
+  "地天泰": "上下相通，整体较顺，可稳步推进。",
+  "天地否": "闭塞不通，先停扩张，找堵点。",
+  "天火同人": "适合连接同频者，靠共识推进。",
+  "火天大有": "资源感增强，但要守住分寸。",
+  "地山谦": "低调、收敛、务实，反而有利。",
+  "雷地豫": "有动能和期待，但别被情绪带走。",
+  "泽雷随": "顺势跟进，观察市场反馈。",
+  "山风蛊": "旧问题要修，先清理漏洞。",
+  "地泽临": "机会靠近，适合近距离试探。",
+  "风地观": "先观察，不急表态。",
+  "火雷噬嗑": "需要处理阻塞，规则要硬一点。",
+  "山火贲": "重包装与外观，但别只重表面。",
+  "山地剥": "消耗较重，先止损保底。",
+  "地雷复": "低谷后有回转，适合重新开始。",
+  "天雷无妄": "少妄动，按真实条件做事。",
+  "山天大畜": "积蓄能力，暂不宜全力外放。",
+  "山雷颐": "先养自己，也要注意输入质量。",
+  "泽风大过": "压力过载，结构要减重。",
+  "坎为水": "险象较多，先控风险。",
+  "离为火": "利曝光表达，但容易焦躁。",
+  "泽山咸": "有感应和吸引，适合试探互动。",
+  "雷风恒": "贵在持续，少折腾方向。",
+  "天山遁": "宜退一步，保留实力。",
+  "雷天大壮": "力量上来，但忌莽撞。",
+  "火地晋": "有上升机会，适合被看见。",
+  "地火明夷": "光被遮住，先保护自己。",
+  "风火家人": "内部秩序重要，先把日常流程理顺。",
+  "火泽睽": "分歧明显，先求小同。",
+  "水山蹇": "路难走，先避险再前进。",
+  "雷水解": "阻力有解，适合拆问题。",
+  "山泽损": "要减法，少做、做准。",
+  "风雷益": "有增益，适合借力与传播。",
+  "泽天夬": "需要决断，但别情绪化。",
+  "天风姤": "偶遇机会，也有不稳定因素。",
+  "泽地萃": "适合集聚资源和人气。",
+  "地风升": "慢慢上升，贵在持续积累。",
+  "泽水困": "受困，先保现金和精力。",
+  "水风井": "有资源但要正确取用。",
+  "泽火革": "适合改变旧模式。",
+  "火风鼎": "可重组资源，形成新结构。",
+  "震为雷": "变化突然，先稳住再行动。",
+  "艮为山": "停止、边界、休整。",
+  "风山渐": "渐进为宜，不要一步到位。",
+  "雷泽归妹": "关系或合作不稳，别急定局。",
+  "雷火丰": "信息多、声量大，防过热。",
+  "火山旅": "不安定，适合轻装试行。",
+  "巽为风": "适合传播、渗透、慢慢进入。",
+  "兑为泽": "利沟通成交，但防口头承诺过度。",
+  "风水涣": "散乱需整合，先聚焦。",
+  "水泽节": "节制、限额、设规则。",
+  "风泽中孚": "重信任，真诚比技巧重要。",
+  "雷山小过": "小事可行，大事谨慎。",
+  "水火既济": "阶段完成，但后续要防松懈。",
+  "火水未济": "尚未完成，继续调整。",
+};
+
+const $ = (id) => document.getElementById(id);
+let currentCast = null;
+
+function randomInt(maxExclusive) {
+  const array = new Uint32Array(1);
+  const limit = Math.floor(0xffffffff / maxExclusive) * maxExclusive;
+  let value;
+  do {
+    crypto.getRandomValues(array);
+    value = array[0];
+  } while (value >= limit);
+  return value % maxExclusive;
+}
+
+function castCoinLine() {
+  const coins = [0, 1, 2].map(() => (randomInt(2) === 1 ? 3 : 2));
+  const value = coins.reduce((sum, v) => sum + v, 0);
+  return { value, coins };
+}
+
+function castBalancedLine() {
+  const values = [6, 7, 8, 9];
+  return { value: values[randomInt(4)], coins: null };
+}
+
+function lineToYang(value) {
+  return value === 7 || value === 9;
+}
+
+function changedLineToYang(value) {
+  if (value === 6) return true;
+  if (value === 9) return false;
+  return lineToYang(value);
+}
+
+function trigramIndex(lines) {
+  return lines.reduce((index, isYang, i) => index + (isYang ? 1 << i : 0), 0);
+}
+
+function hexagramName(lines) {
+  const lower = trigramIndex(lines.slice(0, 3));
+  const upper = trigramIndex(lines.slice(3, 6));
+  return {
+    name: HEXAGRAM_NAMES[upper][lower],
+    upper,
+    lower,
+    upperText: `${TRIGRAMS[upper].name}（${TRIGRAMS[upper].nature}）`,
+    lowerText: `${TRIGRAMS[lower].name}（${TRIGRAMS[lower].nature}）`,
+  };
+}
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function toDateTimeLocalValue(date) {
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+}
+
+function populateSelect(id, values, suffix = "") {
+  const el = $(id);
+  el.innerHTML = values.map((value) => `<option value="${value}">${value}${suffix}</option>`).join("");
+}
+
+function julianDayNumber(date) {
+  const y = date.getFullYear();
+  const m = date.getMonth() + 1;
+  const d = date.getDate();
+  const a = Math.floor((14 - m) / 12);
+  const yy = y + 4800 - a;
+  const mm = m + 12 * a - 3;
+  return d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+}
+
+function sexagenaryDay(date) {
+  // 常用校准：2000-01-01 为庚辰日。
+  const anchor = new Date(2000, 0, 1);
+  const diff = julianDayNumber(date) - julianDayNumber(anchor);
+  const anchorIndex = 16; // 庚辰：16 mod 10 = 庚，16 mod 12 = 辰
+  const index = ((anchorIndex + diff) % 60 + 60) % 60;
+  return {
+    index,
+    stem: STEMS[index % 10],
+    branch: BRANCHES[index % 12],
+    ganzhi: `${STEMS[index % 10]}${BRANCHES[index % 12]}`,
+  };
+}
+
+function approximateMonthBranch(date) {
+  // 近似按节气换月：严肃商用建议后续换成精确节气算法。
+  const md = (date.getMonth() + 1) * 100 + date.getDate();
+  if (md >= 1207 || md < 106) return "子";
+  if (md >= 106 && md < 204) return "丑";
+  if (md >= 204 && md < 306) return "寅";
+  if (md >= 306 && md < 405) return "卯";
+  if (md >= 405 && md < 506) return "辰";
+  if (md >= 506 && md < 606) return "巳";
+  if (md >= 606 && md < 707) return "午";
+  if (md >= 707 && md < 808) return "未";
+  if (md >= 808 && md < 908) return "申";
+  if (md >= 908 && md < 1008) return "酉";
+  if (md >= 1008 && md < 1107) return "戌";
+  return "亥";
+}
+
+function xunkong(dayIndex) {
+  const xun = Math.floor(dayIndex / 10);
+  return EMPTY_BY_XUN[xun] || EMPTY_BY_XUN[0];
+}
+
+function syncDateFieldsFromDate(date) {
+  const day = sexagenaryDay(date);
+  $("monthBranch").value = approximateMonthBranch(date);
+  $("dayStem").value = day.stem;
+  $("dayBranch").value = day.branch;
+}
+
+function relationToPalace(lineElement, palaceElement) {
+  if (lineElement === palaceElement) return "兄弟";
+  if (ELEMENT_GENERATES[lineElement] === palaceElement) return "父母";
+  if (ELEMENT_GENERATES[palaceElement] === lineElement) return "子孙";
+  if (ELEMENT_CONTROLS[lineElement] === palaceElement) return "官鬼";
+  if (ELEMENT_CONTROLS[palaceElement] === lineElement) return "妻财";
+  return "—";
+}
+
+function buildNajia(hex, lines, values, dayStem, monthBranch, dayBranch, emptyBranches = []) {
+  const info = PALACE_INDEX[hex.name] || {
+    palace: "未知宫",
+    palaceElement: "土",
+    kind: "未知",
+    shi: 1,
+    ying: 4,
+  };
+  const lowerTable = NAGAN_BRANCHES[hex.lower].inner;
+  const upperTable = NAGAN_BRANCHES[hex.upper].outer;
+  const start = SIX_SPIRIT_START[dayStem] ?? 0;
+
+  const rows = lines.map((isYang, index) => {
+    const branch = index < 3 ? lowerTable[index] : upperTable[index - 3];
+    const element = BRANCH_ELEMENT[branch];
+    const relation = relationToPalace(element, info.palaceElement);
+    const spirit = SIX_SPIRITS[(start + index) % 6];
+    const marks = [];
+    if (index + 1 === info.shi) marks.push("世");
+    if (index + 1 === info.ying) marks.push("应");
+    if (values[index] === 6 || values[index] === 9) marks.push("动");
+    if (emptyBranches.includes(branch)) marks.push("空");
+    const monthEffects = [];
+    const dayEffects = [];
+    if (branch === monthBranch) monthEffects.push("临月");
+    if (BRANCH_OPPOSITE[branch] === monthBranch) monthEffects.push("月冲");
+    if (ELEMENT_GENERATES[BRANCH_ELEMENT[monthBranch]] === element) monthEffects.push("月生");
+    if (ELEMENT_CONTROLS[BRANCH_ELEMENT[monthBranch]] === element) monthEffects.push("月克");
+    if (branch === dayBranch) dayEffects.push("临日");
+    if (BRANCH_OPPOSITE[branch] === dayBranch) dayEffects.push("日冲");
+    if (ELEMENT_GENERATES[BRANCH_ELEMENT[dayBranch]] === element) dayEffects.push("日生");
+    if (ELEMENT_CONTROLS[BRANCH_ELEMENT[dayBranch]] === element) dayEffects.push("日克");
+    return {
+      index,
+      yao: isYang ? "阳爻" : "阴爻",
+      lineLabel: LINE_LABEL[values[index]],
+      branch,
+      element,
+      relation,
+      spirit,
+      marks,
+      monthEffects,
+      dayEffects,
+      empty: emptyBranches.includes(branch),
+    };
+  });
+
+  return { info, rows };
+}
+
+function relationFocusByTopic(topic, analysis) {
+  if (analysis?.matchedKeys.includes("sell") || analysis?.matchedKeys.includes("money")) return "妻财";
+  if (analysis?.matchedKeys.includes("business")) return "官鬼";
+  if (analysis?.matchedKeys.includes("emotion")) return "子孙";
+  if (analysis?.matchedKeys.includes("relationship")) return "应爻";
+  return {
+    wealth: "妻财",
+    career: "官鬼",
+    relationship: "应爻",
+    health: "子孙",
+    decision: "世爻",
+    general: "世爻",
+  }[topic] || "世爻";
+}
+
+function summarizeNajia(najia, topic, analysis) {
+  const focus = relationFocusByTopic(topic, analysis);
+  const shi = najia.rows.find((r) => r.marks.includes("世"));
+  const ying = najia.rows.find((r) => r.marks.includes("应"));
+  const movingRows = najia.rows.filter((r) => r.marks.includes("动"));
+  const focusRows =
+    focus === "世爻" ? [shi] :
+    focus === "应爻" ? [ying] :
+    najia.rows.filter((r) => r.relation === focus);
+  const readableFocusRows = focusRows.filter(Boolean);
+
+  const warnings = [];
+  if (shi?.monthEffects.includes("月冲") || shi?.dayEffects.includes("日冲")) warnings.push("世爻受冲，自己这一边容易不稳。");
+  if (ying?.monthEffects.includes("月冲") || ying?.dayEffects.includes("日冲")) warnings.push("应爻受冲，对方、市场或外部环境不稳定。");
+  if (movingRows.length >= 4) warnings.push("动爻较多，变量多，不宜一次性做重大决定。");
+  if (readableFocusRows.some((r) => r.empty)) warnings.push(`${focus}落空亡，代表相关事项暂时不实、不稳或还没落地。`);
+  if (readableFocusRows.some((r) => r.monthEffects.includes("月克") || r.dayEffects.includes("日克"))) warnings.push(`${focus}受月日克制，相关事项阻力偏大。`);
+  if (readableFocusRows.some((r) => r.monthEffects.includes("临月") || r.dayEffects.includes("临日") || r.monthEffects.includes("月生") || r.dayEffects.includes("日生"))) warnings.push(`${focus}得月日帮扶，相关事项有可用条件。`);
+
+  return {
+    focus,
+    focusRows: readableFocusRows,
+    text: warnings.length ? warnings.join(" ") : "月日对核心爻没有明显极端冲克，重点看现实条件和动爻变化。",
+  };
+}
+
+function changeRelation(originalElement, changedElement) {
+  if (originalElement === changedElement) return "化同类";
+  if (ELEMENT_GENERATES[changedElement] === originalElement) return "回头生";
+  if (ELEMENT_CONTROLS[changedElement] === originalElement) return "回头克";
+  if (ELEMENT_GENERATES[originalElement] === changedElement) return "化泄";
+  if (ELEMENT_CONTROLS[originalElement] === changedElement) return "化出所克";
+  return "变化";
+}
+
+function buildChangeRelations(najia, changedNajia) {
+  return najia.rows
+    .filter((row) => row.marks.includes("动"))
+    .map((row) => {
+      const changed = changedNajia.rows[row.index];
+      return {
+        index: row.index,
+        from: row,
+        to: changed,
+        relation: changeRelation(row.element, changed.element),
+      };
+    });
+}
+
+function renderHexagram(el, lines, movingValues = []) {
+  el.innerHTML = "";
+  lines
+    .map((isYang, index) => ({ isYang, index }))
+    .reverse()
+    .forEach(({ isYang, index }) => {
+      const yao = document.createElement("div");
+      yao.className = `yao ${isYang ? "yang" : "yin"} ${[6, 9].includes(movingValues[index]) ? "moving" : ""}`;
+      yao.title = `第 ${index + 1} 爻`;
+      el.appendChild(yao);
+    });
+}
+
+function movingSummary(values) {
+  const moving = values
+    .map((value, index) => ({ value, index }))
+    .filter((line) => line.value === 6 || line.value === 9);
+
+  if (moving.length === 0) {
+    return {
+      label: "静卦",
+      text: "没有动爻，说明局面暂时稳定。重点看本卦，不宜急着改变方向。",
+      actionBias: "wait",
+    };
+  }
+  if (moving.length === 1) {
+    return {
+      label: "一爻动",
+      text: `第 ${moving[0].index + 1} 爻动，变化点集中。先抓一个关键问题，不要同时改太多。`,
+      actionBias: "go",
+    };
+  }
+  if (moving.length <= 3) {
+    return {
+      label: `${moving.length} 爻动`,
+      text: `有 ${moving.length} 个动爻，局面正在变化。适合边做边修正，避免一次性押重注。`,
+      actionBias: "go",
+    };
+  }
+  return {
+    label: `${moving.length} 爻动`,
+    text: `动爻较多，代表变量很多、情绪或外部环境不稳。先降复杂度，再做决定。`,
+    actionBias: "wait",
+  };
+}
+
+function analyzeQuestion(question, topic) {
+  const normalized = question.trim();
+  const matches = QUESTION_PATTERNS.filter((item) =>
+    item.patterns.some((pattern) => normalized.includes(pattern))
+  );
+  const primary = matches[0];
+  const hasQuestion = normalized.length > 0;
+  return {
+    hasQuestion,
+    original: normalized,
+    intent: primary ? primary.intent : TOPIC_TEXT[topic].focus,
+    matchedKeys: matches.map((item) => item.key),
+    primaryPattern: primary,
+  };
+}
+
+function readUserContext() {
+  return {
+    situation: $("contextSituation")?.value.trim() || "",
+    fear: $("contextFear")?.value.trim() || "",
+    goal: $("contextGoal")?.value.trim() || "",
+    timeframe: $("contextTimeframe")?.value || "7天内",
+  };
+}
+
+function contextCompleteness(context) {
+  return [context.situation, context.fear, context.goal].filter(Boolean).length;
+}
+
+function getMovingLines(values) {
+  return values
+    .map((value, index) => ({ value, index }))
+    .filter((line) => line.value === 6 || line.value === 9);
+}
+
+function verdictFromScore(score, movingCount, topic, analysis) {
+  let adjusted = score;
+  if (movingCount >= 4) adjusted -= 1;
+  if (analysis.matchedKeys.includes("emotion")) adjusted -= 1;
+  if (analysis.matchedKeys.includes("money") && score < 1) adjusted -= 1;
+
+  if (adjusted >= 3) return { level: "可推进", tone: "但仍建议小步验证，不要一次性加码。" };
+  if (adjusted >= 1) return { level: "可小试", tone: "适合做低成本、可撤回的小动作。" };
+  if (adjusted >= -1) return { level: "先试探", tone: "信息还不够，先确认条件，不急着定生死。" };
+  return { level: "先缓一缓", tone: "当前风险或消耗偏高，先稳住基本盘。" };
+}
+
+function actionList(topic, analysis, verdict, context = {}) {
+  const list = [];
+  if (analysis.matchedKeys.includes("business")) {
+    list.push("把目标缩小成一个动作：发一篇、问一个供应商、测一个价格，不要同时做完整品牌。");
+  }
+  if (analysis.matchedKeys.includes("sell")) {
+    list.push("如果涉及成交，先确认成本、运费、退换货，再报价；不要为了第一单大幅亏损。");
+  }
+  if (analysis.matchedKeys.includes("money")) {
+    list.push("先写出最低生活费和可承受亏损线，超过这条线的动作全部暂停。");
+  }
+  if (analysis.matchedKeys.includes("emotion") || topic === "health") {
+    list.push("如果状态已经很差，今天不要做重大决定，只做能恢复掌控感的小事。");
+  }
+  if (analysis.matchedKeys.includes("relationship")) {
+    list.push("先看对方有没有实际行动，不要只根据口头承诺推进。");
+  }
+  if (analysis.matchedKeys.includes("move")) {
+    list.push("先算时间、路费、住宿、回撤成本，能当天撤回的方案优先。");
+  }
+  if (list.length === 0) {
+    list.push(verdict.level === "可推进" ? "可以推进，但先定一个最小版本。" : "先补信息，再做决定。");
+  }
+  if (context.goal) {
+    list.push(`围绕你最想判断的结果「${context.goal}」，先拆成一个可执行测试，不要直接跳到最终结论。`);
+  }
+  if (context.fear) {
+    list.push(`把你最担心的点「${context.fear}」写成检查清单，先排除最容易出事的一项。`);
+  }
+  list.push("给这件事设一个复盘时间：24小时或3天后再看结果，不要反复无限想。");
+  return list;
+}
+
+function generateReading({ topic, question, main, changed, values, najia, changedNajia, changeRelations, emptyBranches, userContext = {} }) {
+  const topicInfo = TOPIC_TEXT[topic];
+  const moving = movingSummary(values);
+  const analysis = analyzeQuestion(question, topic);
+  const movingLines = getMovingLines(values);
+  const mainAction = HEX_ACTIONS[main.name] || { score: 0, plain: HEX_HINTS[main.name] || "局面中性，重在结合现实条件。" };
+  const changedAction = HEX_ACTIONS[changed.name] || { score: 0, plain: HEX_HINTS[changed.name] || "后续趋势还需要观察。" };
+  const upper = TRIGRAMS[main.upper];
+  const lower = TRIGRAMS[main.lower];
+  const score = mainAction.score + Math.round(changedAction.score * 0.6);
+  const verdict = verdictFromScore(score, movingLines.length, topic, analysis);
+  const actions = actionList(topic, analysis, verdict, userContext);
+  const najiaSummary = summarizeNajia(najia, topic, analysis);
+  const changeText = changeRelations.length
+    ? changeRelations.map((item) => `第${item.index + 1}爻${item.relation}：${item.from.relation}${item.from.branch}${item.from.element} → ${item.to.relation}${item.to.branch}${item.to.element}`).join("；")
+    : "无动爻，本卦不变，重点看当前状态是否稳定。";
+
+  const movingDetails = movingLines.length
+    ? movingLines.map((line) => LINE_POSITION_HINTS[line.index]).join(" ")
+    : "没有动爻，说明这件事短期更像稳定观察局，不适合频繁改策略。";
+
+  const questionText = analysis.hasQuestion
+    ? `你问的是：「${analysis.original}」。我先把它理解为：${analysis.intent}。`
+    : `你没有填写具体问题，所以只能按「${topicInfo.name}」做粗读。想让解读更贴合，最好写成“我想做X，担心Y，接下来Z天该不该行动？”`;
+  const contextCount = contextCompleteness(userContext);
+  const contextText = contextCount
+    ? `你补充的背景是：${userContext.situation || "未写处境"}；你担心：${userContext.fear || "未写担心"}；你想判断：${userContext.goal || "未写目标"}；时间范围：${userContext.timeframe || "7天内"}。`
+    : "你还没有补充具体背景，所以这次解读只能按问题文字和卦象来判断。";
+  const useRowsText = (najiaSummary.focusRows || []).length
+    ? najiaSummary.focusRows.map((r) => `第${r.index + 1}爻 ${r.spirit}${r.relation}${r.branch}${r.element}${r.empty ? "（空亡）" : ""}`).join("；")
+    : "本卦中用神不明显，后续应结合伏神/飞神进一步看。";
+  const riskText = [
+    movingLines.length >= 4 ? "动爻多，变量多，说明这件事不适合一下子定死。" : "",
+    (najiaSummary.focusRows || []).some((r) => r.empty) ? "用神落空，说明你问的结果暂时还不实，可能要等条件出现。" : "",
+    (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月克") || r.dayEffects.includes("日克")) ? "用神受克，现实阻力偏强，不能只靠意愿推进。" : "",
+    (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月生") || r.dayEffects.includes("日生") || r.monthEffects.includes("临月") || r.dayEffects.includes("临日")) ? "用神得生扶，说明并非完全没机会，关键是方式要轻。" : "",
+  ].filter(Boolean);
+
+  return {
+    tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
+    html: `
+      <div class="reading-block">
+        <strong>先把问题翻译成人话</strong>
+        <p>${questionText}</p>
+        <p>${contextText}</p>
+      </div>
+      <div class="reading-block">
+        <strong>结论先说</strong>
+        <p>这卦给出的倾向是：<b>${verdict.level}</b>。${verdict.tone}</p>
+        <p>如果只看卦象：本卦「${main.name}」表示当前局面——${mainAction.plain}；变卦「${changed.name}」表示后续变化——${changedAction.plain}</p>
+      </div>
+      <div class="reading-block">
+        <strong>为什么这样看</strong>
+        <p>上卦为${upper.name}，偏向「${upper.trait}」；下卦为${lower.name}，偏向「${lower.trait}」。${movingDetails}</p>
+      </div>
+      <div class="reading-block">
+        <strong>用神和现实焦点</strong>
+        <p>系统按你的问题自动取用神为「${najiaSummary.focus}」。对应爻：${useRowsText}。</p>
+        <p>${najiaSummary.text}</p>
+      </div>
+      <div class="reading-block">
+        <strong>动变关系</strong>
+        <p>${changeText}</p>
+      </div>
+      <div class="reading-block">
+        <strong>风险点 / 有利点</strong>
+        ${
+          riskText.length
+            ? `<ul>${riskText.map((item) => `<li>${item}</li>`).join("")}</ul>`
+            : `<p>没有看到特别极端的空亡、冲克或多动信号。这不代表一定顺利，只代表卦面没有强烈提示“立刻停手”。</p>`
+        }
+      </div>
+      <div class="reading-block">
+        <strong>对应这个问题，建议这样做</strong>
+        <ol>
+          ${actions.map((item) => `<li>${item}</li>`).join("")}
+        </ol>
+      </div>
+      <div class="reading-block">
+        <strong>${userContext.timeframe || "7天内"}的判断口径</strong>
+        <p>这次更适合看短期趋势，不适合直接推导长期命运。你可以按上面的动作做一个小测试，到时间后用真实反馈复盘：有没有询单、有没有成交、有没有成本失控、你的状态有没有更稳。</p>
+      </div>
+    `,
+  };
+}
+
+function renderNajia(najia, monthBranch, dayStem, dayBranch, emptyBranches, najiaSummary, changeRelations) {
+  $("najiaMeta").innerHTML = [
+    `<div class="pill">卦宫：<strong>${najia.info.palace}</strong>｜五行 ${najia.info.palaceElement}｜${najia.info.kind}</div>`,
+    `<div class="pill">世应：<strong>世在第${najia.info.shi}爻</strong>｜应在第${najia.info.ying}爻</div>`,
+    `<div class="pill">用神：<strong>${najiaSummary.focus}</strong>｜系统按问题类型自动选择</div>`,
+    `<div class="pill">月建：<strong>${monthBranch}</strong>（${BRANCH_ELEMENT[monthBranch]}）｜代表本月大环境</div>`,
+    `<div class="pill">日辰：<strong>${dayStem}${dayBranch}</strong>｜代表当天力量，六神从 ${SIX_SPIRITS[SIX_SPIRIT_START[dayStem]]} 起</div>`,
+    `<div class="pill">空亡：<strong>${emptyBranches.join("、")}</strong>｜相关爻落空，多主暂时不实、未落地或要等填实</div>`,
+  ].join("");
+
+  $("najiaTable").innerHTML = `
+    <div class="najia-head">
+      <span>爻位</span><span>爻象</span><span>六神</span><span>地支</span><span>六亲</span><span>标记</span><span>动变</span><span>月日关系</span>
+    </div>
+    ${najia.rows
+      .map((row) => {
+        const relation = [...row.monthEffects, ...row.dayEffects];
+        const change = changeRelations.find((item) => item.index === row.index);
+        return `
+          <div class="najia-row">
+            <strong>第${row.index + 1}爻</strong>
+            <span>${row.lineLabel}</span>
+            <span>${row.spirit}</span>
+            <span>${row.branch}${row.element}</span>
+            <span>${row.relation}</span>
+            <span>${row.marks.map((m) => `<em class="mark">${m}</em>`).join("") || "—"}</span>
+            <span>${change ? `<em class="mark">${change.relation}</em> ${change.to.branch}${change.to.element}` : "—"}</span>
+            <span>${relation.map((m) => `<em class="mark">${m}</em>`).join("") || "—"}</span>
+          </div>
+        `;
+      })
+      .reverse()
+      .join("")}
+  `;
+}
+
+function renderProJudgement({ najia, najiaSummary, changeRelations, emptyBranches, monthBranch, dayStem, dayBranch }) {
+  const shi = najia.rows.find((r) => r.marks.includes("世"));
+  const ying = najia.rows.find((r) => r.marks.includes("应"));
+  const useRows = najiaSummary.focusRows || [];
+  const useText = useRows.length
+    ? useRows.map((r) => `第${r.index + 1}爻 ${r.spirit} ${r.relation}${r.branch}${r.element}${r.empty ? "（空）" : ""}`).join("；")
+    : "本卦中用神不显，后续应加伏神/飞神规则再判断。";
+  const changeText = changeRelations.length
+    ? changeRelations.map((c) => `第${c.index + 1}爻动，${c.from.branch}${c.from.element}化${c.to.branch}${c.to.element}，为「${c.relation}」。`).join("")
+    : "无动爻，局面短期偏静，重点看本卦与月日。";
+
+  $("proJudgement").innerHTML = [
+    `<div class="pro-item"><strong>月建 / 日辰是什么意思：</strong>月建是这段时间的大环境，日辰是起卦当天的力量。当前按 ${dayStem}${dayBranch} 日、${monthBranch} 月排盘。普通用户不用手动改，除非你有更准确的万年历结果。</div>`,
+    `<div class="pro-item"><strong>自动用神：</strong>${najiaSummary.focus}。对应爻：${useText}</div>`,
+    `<div class="pro-item"><strong>世应：</strong>世爻代表自己/我方：第${shi?.index + 1}爻 ${shi?.branch}${shi?.element}；应爻代表对方/市场/外界：第${ying?.index + 1}爻 ${ying?.branch}${ying?.element}。</div>`,
+    `<div class="pro-item"><strong>空亡：</strong>${emptyBranches.join("、")}为空。爻落空亡，不等于一定失败，更像“暂时不实、没落地、要等条件填实”。</div>`,
+    `<div class="pro-item"><strong>动变：</strong>${changeText}</div>`,
+  ].join("");
+}
+
+function renderReadingFromCurrentCast() {
+  if (!currentCast) return;
+  const withReading = $("withReading").checked;
+  $("readingPanel").classList.toggle("hidden", !withReading);
+  if (!withReading) return;
+  const reading = generateReading({
+    topic: currentCast.topic,
+    question: currentCast.question,
+    main: currentCast.main,
+    changed: currentCast.changed,
+    values: currentCast.values,
+    najia: currentCast.najia,
+    changedNajia: currentCast.changedNajia,
+    changeRelations: currentCast.changeRelations,
+    emptyBranches: currentCast.emptyBranches,
+    userContext: readUserContext(),
+  });
+  $("readingTag").textContent = reading.tag;
+  $("readingText").innerHTML = reading.html;
+}
+
+function cast() {
+  const mode = $("mode").value;
+  const topic = $("topic").value;
+  const question = $("question").value.trim();
+  const castDate = $("castDateTime").value ? new Date($("castDateTime").value) : new Date();
+  if (!$("castDateTime").value) {
+    $("castDateTime").value = toDateTimeLocalValue(castDate);
+    syncDateFieldsFromDate(castDate);
+  }
+  const monthBranch = $("monthBranch").value;
+  const dayStem = $("dayStem").value;
+  const dayBranch = $("dayBranch").value;
+  const dayInfo = sexagenaryDay(castDate);
+  const empty = xunkong(dayInfo.index);
+  const emptyBranches = empty.empty;
+  const raw = [];
+
+  for (let i = 0; i < 6; i += 1) {
+    raw.push(mode === "coin" ? castCoinLine() : castBalancedLine());
+  }
+
+  const values = raw.map((line) => line.value);
+  const mainLines = values.map(lineToYang);
+  const changedLines = values.map(changedLineToYang);
+  const main = hexagramName(mainLines);
+  const changed = hexagramName(changedLines);
+  const changedValues = values.map((value) => (value === 6 ? 7 : value === 9 ? 8 : value));
+  const najia = buildNajia(main, mainLines, values, dayStem, monthBranch, dayBranch, emptyBranches);
+  const changedNajia = buildNajia(changed, changedLines, changedValues, dayStem, monthBranch, dayBranch, emptyBranches);
+  const analysis = analyzeQuestion(question, topic);
+  const najiaSummary = summarizeNajia(najia, topic, analysis);
+  const changeRelations = buildChangeRelations(najia, changedNajia);
+  const moving = values
+    .map((value, index) => ({ value, index }))
+    .filter((line) => line.value === 6 || line.value === 9)
+    .map((line) => `第${line.index + 1}爻`);
+
+  $("result").classList.remove("hidden");
+  $("mainName").textContent = main.name;
+  $("changedName").textContent = changed.name;
+  renderHexagram($("mainHex"), mainLines, values);
+  renderHexagram($("changedHex"), changedLines, []);
+
+  currentCast = {
+    topic,
+    question,
+    main,
+    changed,
+    values,
+    najia,
+    changedNajia,
+    changeRelations,
+    emptyBranches,
+  };
+  renderReadingFromCurrentCast();
+  renderNajia(najia, monthBranch, dayStem, dayBranch, emptyBranches, najiaSummary, changeRelations);
+  renderProJudgement({ najia, najiaSummary, changeRelations, emptyBranches, monthBranch, dayStem, dayBranch });
+
+  const now = new Date();
+  $("meta").innerHTML = [
+    `<div class="pill">时间：<strong>${now.toLocaleString("zh-CN", { hour12: false })}</strong></div>`,
+    `<div class="pill">问题：<strong>${question || "未填写"}</strong></div>`,
+    `<div class="pill">类型：<strong>${TOPIC_TEXT[topic].name}</strong></div>`,
+    `<div class="pill">干支：<strong>${dayStem}${dayBranch}</strong>｜旬空 ${emptyBranches.join("、")}</div>`,
+    `<div class="pill">本卦：<strong>${main.name}</strong>｜上卦 ${main.upperText}，下卦 ${main.lowerText}</div>`,
+    `<div class="pill">变卦：<strong>${changed.name}</strong>｜变爻 ${moving.length ? moving.join("、") : "无"}</div>`,
+  ].join("");
+
+  $("lines").innerHTML = values
+    .map((value, index) => {
+      const coinText = raw[index].coins ? `铜钱：${raw[index].coins.join(" + ")} = ${value}` : "均衡随机";
+      return `
+        <div class="line-row">
+          <strong>第${index + 1}爻</strong>
+          <span>${LINE_LABEL[value]}</span>
+          <span>${coinText}</span>
+        </div>
+      `;
+    })
+    .reverse()
+    .join("");
+
+  $("probabilityText").textContent =
+    mode === "coin"
+      ? "当前为传统三枚铜钱法：每一枚铜钱正反概率各 1/2，因此老阴 1/8、少阳 3/8、少阴 3/8、老阳 1/8；阴阳总体各 1/2，所以本卦 64 卦概率均衡。"
+      : "当前为四象均衡法：老阴、少阳、少阴、老阳每种爻象各 1/4。它更符合“四种结果概率持平”，但不是传统铜钱法概率。";
+}
+
+$("castBtn").addEventListener("click", cast);
+$("clearBtn").addEventListener("click", () => {
+  $("question").value = "";
+  $("contextSituation").value = "";
+  $("contextFear").value = "";
+  $("contextGoal").value = "";
+  currentCast = null;
+  $("result").classList.add("hidden");
+});
+
+function init() {
+  populateSelect("monthBranch", BRANCHES, "月");
+  populateSelect("dayStem", STEMS, "");
+  populateSelect("dayBranch", BRANCHES, "日");
+  const now = new Date();
+  $("castDateTime").value = toDateTimeLocalValue(now);
+  syncDateFieldsFromDate(now);
+  $("castDateTime").addEventListener("change", () => {
+    if ($("castDateTime").value) syncDateFieldsFromDate(new Date($("castDateTime").value));
+  });
+  $("reinterpretBtn").addEventListener("click", renderReadingFromCurrentCast);
+}
+
+init();
