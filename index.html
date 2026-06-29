@@ -207,27 +207,44 @@
           </article>
         </div>
 
-        <article class="panel details">
-          <h3>补充信息，让断卦更贴题</h3>
+        <details class="panel details context-details">
+          <summary>
+            <span>想让它更懂你的事？</span>
+            <small>可不填，点开后补几句话再重新解读</small>
+          </summary>
           <p class="note">
-            卦已经起好，不会重新随机。你可以补充背景后重新解读，让结果更像是在回答“你的事”，而不是泛泛讲卦。
+            卦已经起好，不会重新随机。这里不是必填项；你写得越具体，系统越能先判断“你真正想问什么”，再重新组织回答。
           </p>
           <div class="tip-box">
-            <strong>怎么填才有用？</strong>
-            <p>不要写得很玄，像和朋友讲事情一样写：发生了什么、你怕什么、你想判断什么。系统会根据这些信息重新组织解读。</p>
+            <strong>先帮系统抓重点</strong>
+            <p>如果你不知道怎么写，先选一个类型，再像和朋友说话一样写：发生了什么、你怕什么、你想判断什么。</p>
           </div>
+          <label class="field context-intent">
+            <span>这件事大概属于哪一种？</span>
+            <select id="contextIntent">
+              <option value="">不确定，让系统判断</option>
+              <option value="relationship">感情 / 关系 / 人际</option>
+              <option value="career">工作 / 学习 / 任务</option>
+              <option value="wealth">钱 / 消费 / 投资</option>
+              <option value="daily">吃喝玩乐 / 穿搭 / 今日选择</option>
+              <option value="lost">找东西 / 失物</option>
+              <option value="health">身体 / 情绪 / 睡眠</option>
+              <option value="housing">租房 / 搬家 / 居住</option>
+              <option value="other">其他</option>
+            </select>
+          </label>
           <div class="context-grid">
             <label class="field">
               <span>你现在的真实处境</span>
-              <textarea id="contextSituation" rows="3" placeholder="例如：我最近在换工作/感情冷淡/钱有压力/东西找不到，事情已经持续几天了。"></textarea>
+              <textarea id="contextSituation" rows="3" placeholder="例如：他最近回复少了 / 我想请假但怕领导不高兴 / 手机找不到了 / 今天不知道该不该出门。"></textarea>
             </label>
             <label class="field">
               <span>你最担心什么</span>
-              <textarea id="contextFear" rows="3" placeholder="例如：怕选错、怕被骗、怕关系变差、怕找不回来、怕继续拖下去。"></textarea>
+              <textarea id="contextFear" rows="3" placeholder="例如：怕误会、怕被拒绝、怕花冤枉钱、怕找不回来、怕做错决定。"></textarea>
             </label>
             <label class="field">
               <span>你最想判断的结果</span>
-              <textarea id="contextGoal" rows="3" placeholder="例如：接下来7天要不要行动？对方会不会回应？东西大概在哪？这个选择能不能试？"></textarea>
+              <textarea id="contextGoal" rows="3" placeholder="例如：我要不要主动？今天适不适合做？对方会不会回应？大概先找哪里？"></textarea>
             </label>
             <label class="field">
               <span>时间范围</span>
@@ -241,9 +258,9 @@
             </label>
           </div>
           <div class="button-row">
-            <button id="reinterpretBtn" class="secondary">根据补充信息重新解读</button>
+            <button id="reinterpretBtn" class="secondary">让系统重新理解并解读</button>
           </div>
-        </article>
+        </details>
 
         <details class="panel details pro-details">
           <summary>专业排盘：纳甲、六亲、世应、六神、月建、日辰</summary>

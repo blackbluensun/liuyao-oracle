@@ -913,6 +913,7 @@ function analyzeQuestion(question, topic) {
 
 function readUserContext() {
   return {
+    intentType: $("contextIntent")?.value || "",
     situation: $("contextSituation")?.value.trim() || "",
     fear: $("contextFear")?.value.trim() || "",
     goal: $("contextGoal")?.value.trim() || "",
@@ -1481,15 +1482,32 @@ function getMovingLines(values) {
 }
 
 function detectScenario(topic, question, context = {}) {
+  const intentMap = {
+    relationship: { key: "relationshipRepair", label: "关系/人际", highCommitment: false },
+    career: { key: "workTalk", label: "工作/学习/任务", highCommitment: false },
+    wealth: { key: "shopping", label: "钱/消费", highCommitment: false },
+    daily: { key: "dailyDecision", label: "日常选择", highCommitment: false },
+    lost: { key: "lost", label: "找失物", highCommitment: false },
+    health: { key: "medical", label: "健康/医疗", highCommitment: true, caution: "健康问题请优先咨询医生或专业机构。" },
+    housing: { key: "housing", label: "租房/居住", highCommitment: false },
+  };
   const text = [
     topic,
     question,
+    context.intentType,
     context.situation,
     context.fear,
     context.goal,
     context.timeframe,
   ].filter(Boolean).join(" ");
   const hasAny = (words) => words.some((word) => text.includes(word));
+
+  if (context.intentType && intentMap[context.intentType]) {
+    const chosen = intentMap[context.intentType];
+    if (context.intentType !== "relationship" || !hasAny(["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "催婚"])) {
+      return chosen;
+    }
+  }
 
   if (topic === "lost" || hasAny(["丢了", "丢哪", "丢哪里", "不见了", "找不到", "找回来", "失物", "遗失"])) {
     return { key: "lost", label: "找失物", highCommitment: false };
@@ -1733,6 +1751,30 @@ function buildFollowupHtml(scenario, context, oralIntent) {
   `;
 }
 
+function buildUnderstandingHtml(scenario, context, analysis) {
+  const hasContext = contextCompleteness(context) > 0 || context.intentType;
+  const chosenType = {
+    relationship: "感情 / 关系 / 人际",
+    career: "工作 / 学习 / 任务",
+    wealth: "钱 / 消费 / 投资",
+    daily: "吃喝玩乐 / 穿搭 / 今日选择",
+    lost: "找东西 / 失物",
+    health: "身体 / 情绪 / 睡眠",
+    housing: "租房 / 搬家 / 居住",
+    other: "其他",
+  }[context.intentType] || "";
+  const mainNeed = context.goal || analysis.oralIntent?.normalized || analysis.intent || "看清这件事接下来怎么处理";
+  const worry = context.fear ? `你担心的是「${context.fear}」。` : "你还没有写最担心的点，所以判断会偏大方向。";
+  const situation = context.situation ? `你描述的处境是「${context.situation}」。` : "你没有补充具体处境，系统主要按主问题和卦象判断。";
+  return `
+    <div class="reading-block understanding-block">
+      <strong>系统先这样理解你的问题</strong>
+      <p>${hasContext ? `我会把这件事按「${scenario.label}」来读${chosenType ? `，你手动选择的方向是「${chosenType}」` : ""}。` : `你没有补充背景，我先按「${scenario.label}」粗读。`}</p>
+      <p>${situation}${worry} 你最想判断的是：${mainNeed}。</p>
+    </div>
+  `;
+}
+
 function buildGlossaryHtml() {
   const items = [
     ["世爻", PLAIN_GLOSSARY.世爻],
@@ -1760,12 +1802,41 @@ function verdictFromScore(score, movingCount, topic, analysis, scenario) {
   if (analysis.matchedKeys.includes("money") && score < 1) adjusted -= 1;
 
   let base;
-  if (adjusted >= 3) base = { level: "可推进", tone: "但仍建议小步验证，不要一次性加码。" };
-  else if (adjusted >= 1) base = { level: "可小试", tone: "适合做低成本、可撤回的小动作。" };
-  else if (adjusted >= -1) base = { level: "先试探", tone: "信息还不够，先确认条件，不急着定生死。" };
-  else base = { level: "先缓一缓", tone: "当前风险或消耗偏高，先稳住基本盘。" };
+  if (adjusted >= 3) base = { level: "可以推进", tone: "方向偏顺，但仍建议先做小步动作，不要一次性加码。" };
+  else if (adjusted >= 1) base = { level: "可以小试", tone: "适合先做一个可撤回的小动作，看看现实反馈。" };
+  else if (adjusted >= -1) base = { level: "先看清一点", tone: neutralVerdictTone(topic, analysis, scenario) };
+  else base = { level: "先缓一缓", tone: lowVerdictTone(topic, analysis, scenario) };
 
   return adaptVerdictForScenario(base, scenario, adjusted);
+}
+
+function neutralVerdictTone(topic, analysis, scenario) {
+  if (scenario?.key === "normal") {
+    if (analysis.matchedKeys.includes("relationship")) return "对方态度或外部反馈还不够清楚，先别急着脑补结论，适合低压力确认一次。";
+    if (analysis.matchedKeys.includes("emotion")) return "现在情绪会放大判断，先把事实和感受分开，再决定下一步。";
+    if (analysis.matchedKeys.includes("money")) return "机会和消耗都还没完全看清，先算成本和最坏损失。";
+    if (analysis.matchedKeys.includes("canDo")) return "不是不能做，而是先把动作缩小一点，试一下现实反应。";
+  }
+  if (topic === "relationship") return "关系里还有不确定感，先看对方真实行动，不要只靠一句话判断。";
+  if (topic === "career") return "事情还需要一点准备，先确认资源、时间和对方反馈，再推进。";
+  if (topic === "wealth") return "先别急着花钱或投入，确认成本、回报和退出方式更重要。";
+  if (topic === "health") return "先照顾身体和情绪状态，必要时优先找专业帮助。";
+  if (topic === "lost") return "线索还没完全断，先从最后出现地点和常用位置重新排查。";
+  return "现在更适合先确认一个关键事实，再决定下一步。";
+}
+
+function lowVerdictTone(topic, analysis, scenario) {
+  if (scenario?.key === "normal") {
+    if (analysis.matchedKeys.includes("relationship")) return "当前互动偏消耗，先减少猜测和追问，观察对方是否有实际行动。";
+    if (analysis.matchedKeys.includes("emotion")) return "现在不适合逼自己做决定，先恢复睡眠、饮食和基本节奏。";
+    if (analysis.matchedKeys.includes("money")) return "当前更适合保守一点，先守住现金和底线。";
+  }
+  if (topic === "relationship") return "这段互动目前不够稳，先保护边界，不要继续加大投入。";
+  if (topic === "career") return "阻力或消耗偏高，先补准备、留后路，不建议硬冲。";
+  if (topic === "wealth") return "消耗信号偏强，先不要冲动消费、投资或承诺支出。";
+  if (topic === "health") return "身体和情绪优先，明显不适请先处理现实健康问题。";
+  if (topic === "lost") return "找回阻力偏大，先问人、查监控或联系相关场所，不要只原地找。";
+  return "当前不适合硬推，先把动作放轻一点，等信息更清楚再说。";
 }
 
 function actionList(topic, analysis, verdict, context = {}, scenario) {
@@ -1951,6 +2022,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>${scenarioPlainAdvice(scenario)} 这一卦更适合看当前节奏和风险，不适合替你直接定结果。真正落到现实里，还要看沟通、证据、条件和后路是否站得住。</p>
       </div>`
     : "";
+  const understandingHtml = buildUnderstandingHtml(scenario, userContext, analysis);
   const contextInsightHtml = buildContextInsightHtml(effectiveTopic, userContext, verdict, scenario);
   const oralIntentHtml = analysis.oralIntent
     ? `<div class="reading-block oral-intent-block">
@@ -1979,6 +2051,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
   const actionPreview = actions.slice(0, 2);
   return {
     tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
+    scenarioLabel: scenario.label,
     html: `
       <div class="result-hero">
         <div>
@@ -2002,6 +2075,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>${contextText}</p>
       </div>
       ${oralIntentHtml}
+      ${understandingHtml}
       <div class="reading-block">
         <strong>一句话判断</strong>
         <p>这卦给出的倾向是：<b>${verdict.level}</b>。${verdict.tone}</p>
@@ -2124,7 +2198,7 @@ function renderReadingFromCurrentCast(options = {}) {
   $("readingTag").textContent = reading.tag;
   $("readingText").innerHTML = reading.html;
   if (options.showNotice) {
-    $("readingNotice").textContent = options.noticeText || "已根据补充信息更新解读，请从这里继续看";
+    $("readingNotice").textContent = options.noticeText || `已重新理解：这次重点按「${reading.scenarioLabel}」来读，请从这里继续看`;
     $("readingNotice").classList.remove("hidden");
     $("readingPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => {
@@ -2243,6 +2317,7 @@ function cast() {
 $("castBtn").addEventListener("click", cast);
 $("clearBtn").addEventListener("click", () => {
   $("question").value = "";
+  $("contextIntent").value = "";
   $("contextSituation").value = "";
   $("contextFear").value = "";
   $("contextGoal").value = "";
@@ -2261,7 +2336,7 @@ function init() {
     if ($("castDateTime").value) syncDateFieldsFromDate(new Date($("castDateTime").value));
   });
   $("topic").addEventListener("change", updateTopicUI);
-  $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true, noticeText: "已重新解读，结果已更新在这里" }));
+  $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
   document.querySelectorAll(".example-chip").forEach((button) => {
     button.addEventListener("click", () => {
       $("topic").value = button.dataset.topic || "general";
