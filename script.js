@@ -363,6 +363,54 @@ const ORAL_INTENT_LIBRARY = [
     followups: ["今天最重要的一件小事是什么？", "你现在是累、焦虑、兴奋，还是没方向？", "有没有必须完成的现实任务？"],
   },
   {
+    key: "apologize_or_explain",
+    topic: "relationship",
+    phrases: ["要不要道歉", "该不该道歉", "要不要解释", "该不该解释", "要不要低头", "怎么和好"],
+    normalized: "判断是否适合主动解释、道歉或修复关系。",
+    focus: "重点看事情有没有误会、对方是否还愿意沟通，以及你主动后是否会更清楚。",
+    followups: ["这件事是谁先越界或伤害了谁？", "你想道歉是为了修复关系，还是害怕失去？", "对方现在还有没有沟通窗口？"],
+  },
+  {
+    key: "reply_or_not",
+    topic: "relationship",
+    phrases: ["不回消息", "回不回", "要不要回", "怎么回", "要不要已读", "拉黑"],
+    normalized: "判断现在是否适合回复、等待或拉开距离。",
+    focus: "重点看回复能否让关系更清楚，而不是让自己继续内耗。",
+    followups: ["对方多久没回？", "你想回复是为了解决问题，还是想得到情绪回应？", "如果对方继续冷淡，你能接受吗？"],
+  },
+  {
+    key: "work_talk",
+    topic: "career",
+    phrases: ["领导是不是", "同事是不是", "要不要和领导谈", "要不要请假", "要不要提离职", "要不要谈薪", "任务能不能做好"],
+    normalized: "判断工作沟通、请假、谈薪或任务推进是否适合现在行动。",
+    focus: "重点看证据、时机、对方态度和你手上准备是否充分。",
+    followups: ["你现在有没有具体证据或材料？", "这次沟通的目标是什么？", "如果对方不同意，你的备选方案是什么？"],
+  },
+  {
+    key: "social_event",
+    topic: "relationship",
+    phrases: ["要不要去饭局", "要不要去聚会", "要不要赴约", "这个局", "参加这个局", "见这个人"],
+    normalized: "判断是否适合参加饭局、聚会或赴约。",
+    focus: "重点看安全感、关系价值、精力消耗和是否有必要出现。",
+    followups: ["这个局对你有什么实际意义？", "你是想去，还是不好意思拒绝？", "是否涉及喝酒、金钱、安全或人情压力？"],
+  },
+  {
+    key: "hair_appearance",
+    topic: "general",
+    phrases: ["剪头发", "换发型", "染头发", "烫头", "做造型", "适合变美", "适合拍照"],
+    normalized: "判断现在是否适合调整发型、形象或拍照状态。",
+    focus: "重点看场合需求、预算、恢复期和你是否只是情绪性冲动。",
+    followups: ["这次改变是刚需、拍照需求，还是情绪冲动？", "你能接受失败或恢复期吗？", "预算会不会影响生活？"],
+  },
+  {
+    key: "daily_decision",
+    topic: "general",
+    phrases: ["适合出门吗", "适合见人吗", "适合谈事情吗", "适合做决定吗", "适合花钱吗", "休息还是行动"],
+    normalized: "判断今天更适合行动、沟通、休息，还是暂缓决定。",
+    focus: "重点看今天的精力、时机和事情是否可撤回。",
+    followups: ["这件事今天必须做吗？", "它可不可以延后或降低动作？", "你现在的身体和情绪状态如何？"],
+  },
+  {
     key: "future_general",
     topic: "general",
     phrases: ["以后会怎样", "后面怎么样", "未来怎么样", "发展如何", "有没有长期帮助", "结果会好吗"],
@@ -1452,6 +1500,9 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["离婚", "分手", "复合", "出轨", "冷战", "前任"])) {
     return { key: "relationshipBreak", label: "感情重大选择", highCommitment: true };
   }
+  if (hasAny(["道歉", "解释", "低头", "和好", "不回消息", "不回我", "回消息", "怎么回", "拉黑", "已读"])) {
+    return { key: "relationshipRepair", label: "关系修复/回复", highCommitment: false };
+  }
   if (hasAny(["买房", "卖房", "房贷", "首付", "贷款买房", "签购房"])) {
     return { key: "house", label: "房产/贷款", highCommitment: true };
   }
@@ -1469,6 +1520,18 @@ function detectScenario(topic, question, context = {}) {
   }
   if (hasAny(["吃什么", "吃啥", "点外卖", "餐厅", "饭店", "火锅", "烧烤", "奶茶", "咖啡", "晚饭", "午饭", "早餐", "宵夜"])) {
     return { key: "eatDaily", label: "吃什么", highCommitment: false };
+  }
+  if (hasAny(["剪头发", "换发型", "染头发", "烫头", "做造型", "适合拍照", "今天拍照", "变美"])) {
+    return { key: "hairAppearance", label: "发型/形象", highCommitment: false };
+  }
+  if (hasAny(["要不要去饭局", "饭局", "要不要去聚会", "聚会", "赴约", "这个局", "参加这个局", "见这个人"])) {
+    return { key: "socialEvent", label: "饭局/聚会/赴约", highCommitment: false };
+  }
+  if (hasAny(["领导是不是", "同事是不是", "要不要和领导谈", "和领导谈", "要不要请假", "请假", "谈薪", "任务能不能做好", "要不要投简历", "投简历"])) {
+    return { key: "workTalk", label: "工作沟通/任务", highCommitment: false };
+  }
+  if (hasAny(["适合出门吗", "适合见人吗", "适合谈事情吗", "适合做决定吗", "适合花钱吗", "休息还是行动"])) {
+    return { key: "dailyDecision", label: "今日选择", highCommitment: false };
   }
   if (hasAny(["去哪玩", "去哪里玩", "约会去哪", "周末去哪", "逛街", "看电影", "展览", "公园", "海边", "爬山", "游乐园", "散步", "约朋友"])) {
     return { key: "whereToPlay", label: "去哪玩", highCommitment: false };
@@ -1500,7 +1563,7 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["考研", "考公", "考试", "证书", "上岸", "复习", "学习", "成绩", "毕业"])) {
     return { key: "study", label: "学习/考试", highCommitment: false };
   }
-  if (hasAny(["分期", "相机", "手机", "电脑", "买一台", "会不会后悔", "消费"])) {
+  if (hasAny(["分期", "相机", "手机", "电脑", "买一台", "会不会后悔", "消费", "二手", "优惠", "办卡", "会员", "课程", "闲置", "值不值得买"])) {
     return { key: "shopping", label: "消费/现金流", highCommitment: false };
   }
   if (hasAny(["医美", "整形", "美容项目", "注射", "手术项目"])) {
@@ -1551,13 +1614,18 @@ function adaptVerdictForScenario(base, scenario, adjusted) {
     return { level: "不宜冲动消费", tone: "卦象提示消耗偏高，容易买完短暂开心、后续压力变大。" };
   }
 
-  if (["eatDaily", "whereToPlay", "wearColor", "outfitStyle", "dailyMood"].includes(scenario?.key)) {
+  if (["eatDaily", "whereToPlay", "wearColor", "outfitStyle", "dailyMood", "hairAppearance", "socialEvent", "workTalk", "dailyDecision", "relationshipRepair"].includes(scenario?.key)) {
     const lightTone = {
       eatDaily: ["可以选", "先按身体舒服、距离近、预算可接受来选，不用把吃饭变成重大选择。"],
       whereToPlay: ["可以安排", "适合轻松出门，但行程别排太满，留一个备用地点就够。"],
       wearColor: ["可以这样搭", "颜色更适合当作气质提示，优先选你穿着自在、符合场合的方案。"],
       outfitStyle: ["可以这样穿", "先看场合，再看舒适度和你想表达的感觉，不必追求过度复杂。"],
       dailyMood: ["适合轻安排", "今天更适合保留弹性，先完成一个小事，再看状态要不要加码。"],
+      hairAppearance: ["可以小调整", "适合做低风险形象调整；如果是大改发型，先确认预算、恢复期和失败后能否接受。"],
+      socialEvent: ["可以轻量参与", "适合保留边界地参加，不必把饭局或聚会变成压力任务。"],
+      workTalk: ["可以先准备", "适合先整理证据、目标和话术，再决定是否沟通或请假。"],
+      dailyDecision: ["适合轻判断", "今天更适合做可撤回的小动作，不宜在状态不明时做最终决定。"],
+      relationshipRepair: ["可以先低压沟通", "适合先确认事实和态度，不要一上来逼问、道德审判或连续轰炸。"],
     }[scenario.key];
     if (adjusted >= 2) return { level: lightTone[0], tone: lightTone[1] };
     if (adjusted >= 0) return { level: "先简单一点", tone: "不要纠结太久，选一个低压力、可调整的方案就好。" };
@@ -1586,6 +1654,7 @@ function scenarioPlainAdvice(scenario) {
   const map = {
     marriage: "看婚姻不要只看感情浓度，要看长期责任、现实条件和冲突处理。",
     relationshipBreak: "感情重大选择先看对方行动和你的稳定感，不要只看一时回应。",
+    relationshipRepair: "关系修复先看有没有沟通窗口，以及你的主动会不会让事情更清楚。",
     house: "房产问题先看现金流、贷款压力、合同和最坏情况。",
     job: "职业去留先看后路、现金流、下家确定性和身心承受力。",
     investment: "钱财风险先看本金安全、杠杆、退出机制和你能不能承受亏损。",
@@ -1603,6 +1672,10 @@ function scenarioPlainAdvice(scenario) {
     wearColor: "颜色问题适合看氛围和场合，不要机械理解成唯一幸运色。",
     outfitStyle: "穿搭问题先看场合和舒适度，再看你想表达的气质。",
     dailyMood: "今日状态适合做轻提醒，重点是让今天更稳一点。",
+    hairAppearance: "发型形象先看是否可恢复、是否符合场合，以及你是不是一时冲动。",
+    socialEvent: "饭局聚会先看安全、精力、人情压力和是否真的有必要出现。",
+    workTalk: "工作沟通先看证据、目标、话术和备选方案，不要只凭情绪开口。",
+    dailyDecision: "今日选择先看是否必须今天做、能否撤回，以及你的状态是否稳定。",
     beautyMedical: "医美问题同时看健康风险和消费压力，资质与恢复期优先。",
     city: "城市去留要同时看机会、成本、通勤、人脉和身心状态。",
     product: "产品问题先看用户卡点和最小验证，不要一上来大改。",
@@ -1617,6 +1690,7 @@ function followupQuestions(scenario, topic, oralIntent) {
   const map = {
     marriage: ["你们在一起多久了？", "当前最大矛盾是钱、父母、居住、孩子，还是信任？", "你想看三个月内推进，还是长期婚姻质量？"],
     relationshipBreak: ["你们现在是否还联系？", "对方有没有持续行动，而不是偶尔回应？", "你最想判断复合、放下，还是主动联系？"],
+    relationshipRepair: ["你想修复关系，还是只想获得回应？", "对方现在有没有沟通窗口？", "你能接受对方暂时不回应吗？"],
     house: ["首付后还剩几个月生活费？", "贷款月供占收入多少？", "合同、产权、地段和退出方案是否确认？"],
     job: ["你是否已有下家或现金缓冲？", "辞职是为了机会，还是为了逃离消耗？", "最坏几个月没收入能否承受？"],
     investment: ["投入金额占你存款多少？", "是否借钱或加杠杆？", "亏到多少你会停止？"],
@@ -1634,6 +1708,10 @@ function followupQuestions(scenario, topic, oralIntent) {
     wearColor: ["今天是什么场合？", "你想显得稳重、亲和、清爽，还是有存在感？", "有没有必须避开的颜色？"],
     outfitStyle: ["今天要见谁、做什么？", "你想要舒服、正式、可爱、利落，还是拍照好看？", "天气和行动量如何？"],
     dailyMood: ["今天最重要的一件小事是什么？", "你现在是累、焦虑、兴奋，还是没方向？", "有没有必须完成的现实任务？"],
+    hairAppearance: ["这是小调整还是大改？", "你能接受失败或恢复期吗？", "这次改变是场合需要，还是情绪冲动？"],
+    socialEvent: ["这个局对你有什么实际意义？", "你是想去，还是不好意思拒绝？", "是否涉及喝酒、金钱、安全或人情压力？"],
+    workTalk: ["你有没有具体证据或材料？", "这次沟通的目标是什么？", "如果对方不同意，你的备选方案是什么？"],
+    dailyDecision: ["这件事今天必须做吗？", "它可不可以延后或降低动作？", "你现在的身体和情绪状态如何？"],
     beautyMedical: ["机构和医生资质是否确认？", "恢复期和风险你是否能接受？", "这笔钱是否会影响现金流？"],
     city: ["新城市/老家的收入机会是什么？", "生活成本和通勤成本是多少？", "三个月后不适合能否撤回？"],
     product: ["用户具体在哪一步看不懂？", "你要验证的是留存、转化、付费，还是理解成本？", "能否先改一个最小版本测试？"],
@@ -1725,6 +1803,10 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
     list.push("先看双方投入是否对等：回应、尊重、主动、边界，而不是只看一两句话。");
     list.push("如果关系让你长期内耗，可以先减少投入，观察对方是否愿意修复。");
   }
+  if (scenario?.key === "relationshipRepair") {
+    list.push("先只发一条低压力信息：说清事实、表达态度、给对方空间，不要连续追问。");
+    list.push("如果对方持续回避，把重点从“逼对方回应”转成“保护自己的边界和情绪”。");
+  }
   if (scenario?.key === "study") {
     list.push("把目标拆成复习清单：每天学什么、做多少题、错题怎么复盘。");
     list.push("不要只问能不能上岸，先用7天完成率判断计划是否真实可执行。");
@@ -1752,6 +1834,31 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
   if (scenario?.key === "dailyMood") {
     list.push("今天先只定一个最重要的小事，完成后再决定要不要加任务。");
     list.push("如果身体累，先处理吃饭、睡眠、洗澡、收拾环境这些基础事项。");
+  }
+  if (scenario?.key === "hairAppearance") {
+    list.push("如果只是修剪、打理、拍照造型，可以小改；如果是漂染、烫发、大改，先延迟24小时。");
+    list.push("先找3张参考图，确认预算、护理成本和失败后能否接受，再预约。");
+  }
+  if (scenario?.key === "socialEvent") {
+    list.push("先判断这个局的意义：放松、维护关系、获取信息，还是纯人情压力。意义不清就不要硬撑。");
+    list.push("如果要去，提前设好离场时间和边界；涉及喝酒、金钱或安全风险时，优先保守。");
+  }
+  if (scenario?.key === "workTalk") {
+    list.push("先把事实、诉求、底线写成三句话，再决定要不要开口。不要带着一团情绪直接谈。");
+    list.push("如果是请假/谈薪/任务沟通，准备一个替代方案：时间怎么补、工作怎么交接、对方不同意怎么办。");
+  }
+  if (scenario?.key === "dailyDecision") {
+    list.push("先问自己：这件事今天必须做吗？如果不是必须，把动作降到最小。");
+    list.push("今天适合先确认一个事实、发一个试探消息、做一个小整理，不适合直接做不可撤回决定。");
+  }
+  if (scenario?.key === "lost") {
+    const q = [analysis.original, context.goal, context.situation].join(" ");
+    if (/(手机|身份证|证件|银行卡|钱包)/.test(q)) {
+      list.push("如果是手机、证件、银行卡或钱包，找的同时先做保护动作：定位、挂失、联系场所或平台。");
+    }
+    if (/(猫|狗|宠物)/.test(q)) {
+      list.push("如果是宠物走失，先扩大现实搜寻：楼道、小区、监控、物业、附近群和宠物医院，不要只等卦象。");
+    }
   }
   if (scenario?.key === "product") {
     list.push("先问3个真实用户：哪一步看不懂、哪里想退出、他们最想要什么结果。");
