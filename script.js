@@ -1,7 +1,3 @@
-// 把你的腾讯问卷公开链接填到这里即可启用真实反馈收集。
-// 例如：https://wj.qq.com/s2/xxxxxx/xxxx/
-const FEEDBACK_FORM_URL = "";
-
 const TRIGRAMS = {
   0: { name: "坤", nature: "地", trait: "承载、稳定、顺势" },
   1: { name: "震", nature: "雷", trait: "启动、变化、惊动" },
@@ -1541,8 +1537,8 @@ function generateReading({ topic, question, main, changed, values, najia, change
   ].filter(Boolean);
   const scenarioNotice = scenario.highCommitment
     ? `<div class="reading-block scenario-notice">
-        <strong>重大问题提醒</strong>
-        <p>系统识别到这是「${scenario.label}」问题。它不适合用“低成本试一试”的口径判断，卦象只能作为趋势提醒；真正要看的，是现实条件、责任边界、证据和你能不能承担后果。</p>
+        <strong>${scenario.label}要多看一层</strong>
+        <p>${scenarioPlainAdvice(scenario)} 这一卦更适合看当前节奏和风险，不适合替你直接定结果。真正落到现实里，还要看沟通、证据、条件和后路是否站得住。</p>
       </div>`
     : "";
   const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict, scenario);
@@ -1710,45 +1706,13 @@ function renderReadingFromCurrentCast(options = {}) {
   }
 }
 
-function handleFeedback(value) {
-  const label = {
-    understood: "看懂了",
-    confusing: "看不懂",
-    generic: "太泛了",
-    offtopic: "不贴题",
-  }[value] || "其他反馈";
-  const text = {
-    understood: "收到：如果你觉得看懂了，可以按“建议这样做”执行，并在设定时间后回来复盘。",
-    confusing: "收到：建议先点开“术语注释”，或者在补充信息里用自己的话写清楚处境后重新解读。",
-    generic: "收到：这通常是因为问题或背景太宽泛。请补充时间范围、现实处境和最担心的结果。",
-    offtopic: "收到：请在补充信息里写清楚你真正想判断的核心结果，系统会重新组织解读。",
-  }[value] || "已记录你的反馈。";
-  const formLink = $("feedbackFormLink");
-  if (FEEDBACK_FORM_URL) {
-    const params = new URLSearchParams({
-      feedback: label,
-      question: currentCast?.question || "",
-      tag: $("readingTag")?.textContent || "",
-    });
-    const joiner = FEEDBACK_FORM_URL.includes("?") ? "&" : "?";
-    formLink.href = `${FEEDBACK_FORM_URL}${joiner}${params.toString()}`;
-    formLink.textContent = `继续填写详细反馈（${label}）`;
-    formLink.classList.remove("hidden");
-    $("feedbackNotice").textContent = `${text} 如果你愿意，也可以点下面的问卷把具体感受发给站长。`;
-  } else {
-    formLink.classList.add("hidden");
-    $("feedbackNotice").textContent = `${text} 站长还没有配置腾讯问卷链接，暂时只能在本页提示，不能真正收到你的反馈。`;
-  }
-  $("feedbackNotice").classList.remove("hidden");
-}
-
 function updateTopicUI() {
   const isLost = $("topic").value === "lost";
   $("lostFields").classList.toggle("hidden", !isLost);
   if (isLost && !$("question").value.trim()) {
     $("question").placeholder = "例如：我的钥匙不见了，想知道大概在哪里、还能不能找回？";
   } else if (!isLost) {
-    $("question").placeholder = "例如：我想换工作，接下来一个月适不适合投简历？";
+    $("question").placeholder = "例如：我最近很纠结要不要换方向，担心选错，想看接下来一个月该不该行动。";
   }
 }
 
@@ -1862,9 +1826,6 @@ function init() {
   });
   $("topic").addEventListener("change", updateTopicUI);
   $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
-  document.querySelectorAll(".feedback-chip").forEach((button) => {
-    button.addEventListener("click", () => handleFeedback(button.dataset.feedback));
-  });
   document.querySelectorAll(".example-chip").forEach((button) => {
     button.addEventListener("click", () => {
       $("topic").value = button.dataset.topic || "general";
