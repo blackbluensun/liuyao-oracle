@@ -241,6 +241,110 @@ const QUESTION_PATTERNS = [
   },
 ];
 
+const ORAL_INTENT_LIBRARY = [
+  {
+    key: "relationship_possible",
+    topic: "relationship",
+    phrases: ["还有戏吗", "还有机会吗", "还有没有可能", "是不是没希望了", "还能继续吗", "有没有结果", "能不能成"],
+    normalized: "判断这段关系或这件事是否还有继续发展的可能。",
+    focus: "重点看对方是否还有实际回应，以及事情有没有继续推进的条件。",
+    followups: ["你们现在是什么关系？", "最近一次真实互动是什么时候？", "你想主动推进，还是想判断要不要放下？"],
+  },
+  {
+    key: "other_mind",
+    topic: "relationship",
+    phrases: ["他怎么想", "她怎么想", "对方怎么想", "到底咋想", "到底怎么想", "什么意思", "他是不是", "她是不是"],
+    normalized: "判断对方态度是否明确，以及对方真实意愿偏向哪里。",
+    focus: "重点看应爻、对方行动和世应关系，不只看对方说了什么。",
+    followups: ["对方最近有没有主动行动？", "你们现在是暧昧、恋爱、冷战，还是分开？", "你最想知道对方态度还是下一步行动？"],
+  },
+  {
+    key: "should_contact",
+    topic: "relationship",
+    phrases: ["该不该主动", "要不要联系", "要不要找他", "要不要找她", "要不要发消息", "该不该开口", "要不要表白"],
+    normalized: "判断自己是否适合主动沟通，以及主动后可能带来的变化。",
+    focus: "重点看世爻状态、应爻回应和动爻位置，判断主动是否有用。",
+    followups: ["你们多久没联系了？", "主动联系的目的是什么？", "你能接受对方不回应吗？"],
+  },
+  {
+    key: "should_quit",
+    topic: "decision",
+    phrases: ["该撤吗", "该撤了", "要不要撤", "是不是该放弃", "要不要放弃", "还要坚持吗", "继续耗着", "止损", "算了吧", "该放手吗"],
+    normalized: "判断是否应该停止投入、暂缓推进或及时止损。",
+    focus: "重点看当前消耗是否过大，以及继续投入有没有现实反馈。",
+    followups: ["你已经投入了多少时间、钱或情绪？", "继续下去最坏结果是什么？", "有没有新的反馈支持你继续？"],
+  },
+  {
+    key: "reliable",
+    topic: "decision",
+    phrases: ["靠谱吗", "稳不稳", "能信吗", "会不会被骗", "是不是坑", "有没有风险", "靠不靠谱"],
+    normalized: "判断对方、机会或方案是否可靠，以及风险是否可控。",
+    focus: "重点看应爻、官鬼、父母和兄弟，尤其要看证据、规则和现实承诺。",
+    followups: ["对方给过什么证据或承诺？", "是否涉及钱、合同或隐私？", "如果判断错了，你会损失什么？"],
+  },
+  {
+    key: "go_for_it",
+    topic: "decision",
+    phrases: ["要不要冲", "能不能冲", "可不可以上", "是不是机会", "该不该抓住", "现在能不能动"],
+    normalized: "判断现在是否适合行动，以及行动力度应该多大。",
+    focus: "重点看动爻、世爻承受力和外部条件是否配合。",
+    followups: ["这个行动可撤回吗？", "你准备投入多少成本？", "最小一步可以先做什么？"],
+  },
+  {
+    key: "regret",
+    topic: "wealth",
+    phrases: ["会不会后悔", "值不值", "划不划算", "要不要买", "买了会怎样", "亏不亏"],
+    normalized: "判断这个选择是否值得，后续是否容易产生后悔或成本压力。",
+    focus: "重点看财爻、兄弟和现实现金流，区分真需求和情绪消费。",
+    followups: ["这笔钱占你月收入或存款多少？", "它是刚需、生产力工具，还是情绪消费？", "能否延迟24小时再决定？"],
+  },
+  {
+    key: "payback",
+    topic: "wealth",
+    phrases: ["能不能回本", "能赚钱吗", "能不能赚", "有没有利润", "会不会亏", "赚不赚钱"],
+    normalized: "判断这件事是否有回本或盈利可能，以及成本风险是否可控。",
+    focus: "重点看财爻、子孙反馈和兄弟消耗，不只看有没有机会。",
+    followups: ["成本、售价、运费、售后分别是多少？", "有没有真实用户愿意付费？", "最坏亏损你能不能承受？"],
+  },
+  {
+    key: "lost_where",
+    topic: "lost",
+    phrases: ["在哪", "在哪里", "还能找回来吗", "是不是被拿了", "谁拿了", "丢哪了", "找得到吗"],
+    normalized: "判断失物是否还能找回，以及优先寻找的方向和环境。",
+    focus: "重点看财爻、世应、空亡、六神和方位，不只看能不能找回。",
+    followups: ["最后一次看到在哪里？", "中间谁可能接触过？", "是否需要先挂失、报警或联系场所？"],
+  },
+  {
+    key: "overthinking",
+    topic: "health",
+    phrases: ["是不是我想多了", "是不是我太敏感", "我是不是多虑了", "是不是焦虑", "心里没底", "很内耗"],
+    normalized: "判断当前担心是现实信号，还是情绪放大后的消耗。",
+    focus: "重点看世爻、子孙、官鬼和动爻，区分真实风险与心理压力。",
+    followups: ["有没有现实证据支持你的担心？", "这个担心持续多久了？", "你现在最需要确认什么？"],
+  },
+  {
+    key: "future_general",
+    topic: "general",
+    phrases: ["以后会怎样", "后面怎么样", "未来怎么样", "发展如何", "有没有长期帮助", "结果会好吗"],
+    normalized: "判断后续趋势，但需要缩小时间范围和具体目标。",
+    focus: "重点看本卦到变卦的趋势，不适合直接断一生或长期命运。",
+    followups: ["你想看多久内？", "你最关心结果、过程，还是风险？", "这件事现在进展到哪一步？"],
+  },
+];
+
+function matchOralIntent(question) {
+  const normalized = (question || "").replace(/\s+/g, "");
+  if (!normalized) return null;
+  const matches = ORAL_INTENT_LIBRARY
+    .map((item) => {
+      const hits = item.phrases.filter((phrase) => normalized.includes(phrase)).length;
+      return { ...item, score: hits };
+    })
+    .filter((item) => item.score > 0)
+    .sort((a, b) => b.score - a.score || b.phrases.length - a.phrases.length);
+  return matches[0] || null;
+}
+
 const LINE_POSITION_HINTS = {
   0: "初爻动：问题刚开始，先看基础条件，不要急着看结果。",
   1: "二爻动：适合从内部调整，比如流程、准备、价格、沟通方式。",
@@ -578,6 +682,10 @@ function buildNajia(hex, lines, values, dayStem, monthBranch, dayBranch, emptyBr
 
 function relationFocusByTopic(topic, analysis) {
   if (topic === "lost" || analysis?.matchedKeys.includes("lost")) return "妻财";
+  if (analysis?.matchedKeys.includes("lost_where")) return "妻财";
+  if (analysis?.matchedKeys.includes("payback") || analysis?.matchedKeys.includes("regret")) return "妻财";
+  if (analysis?.matchedKeys.includes("reliable") || analysis?.matchedKeys.includes("other_mind")) return "应爻";
+  if (analysis?.matchedKeys.includes("overthinking")) return "子孙";
   if (analysis?.matchedKeys.includes("sell") || analysis?.matchedKeys.includes("money")) return "妻财";
   if (analysis?.matchedKeys.includes("business")) return "官鬼";
   if (analysis?.matchedKeys.includes("emotion")) return "子孙";
@@ -690,9 +798,19 @@ function movingSummary(values) {
 
 function analyzeQuestion(question, topic) {
   const normalized = question.trim();
+  const oralIntent = matchOralIntent(normalized);
   const matches = QUESTION_PATTERNS.filter((item) =>
     item.patterns.some((pattern) => normalized.includes(pattern))
   );
+  if (oralIntent && !matches.some((item) => item.key === oralIntent.key)) {
+    matches.unshift({
+      key: oralIntent.key,
+      patterns: oralIntent.phrases,
+      intent: oralIntent.normalized,
+      good: oralIntent.focus,
+      bad: oralIntent.focus,
+    });
+  }
   const primary = matches[0];
   const hasQuestion = normalized.length > 0;
   return {
@@ -701,6 +819,7 @@ function analyzeQuestion(question, topic) {
     intent: primary ? primary.intent : TOPIC_TEXT[topic].focus,
     matchedKeys: matches.map((item) => item.key),
     primaryPattern: primary,
+    oralIntent,
   };
 }
 
@@ -1359,7 +1478,8 @@ function scenarioPlainAdvice(scenario) {
   return map[scenario?.key] || map.normal;
 }
 
-function followupQuestions(scenario, topic) {
+function followupQuestions(scenario, topic, oralIntent) {
+  if (oralIntent?.followups?.length) return oralIntent.followups;
   const map = {
     marriage: ["你们在一起多久了？", "当前最大矛盾是钱、父母、居住、孩子，还是信任？", "你想看三个月内推进，还是长期婚姻质量？"],
     relationshipBreak: ["你们现在是否还联系？", "对方有没有持续行动，而不是偶尔回应？", "你最想判断复合、放下，还是主动联系？"],
@@ -1380,9 +1500,9 @@ function followupQuestions(scenario, topic) {
   return map[scenario?.key] || map[topic] || map.normal;
 }
 
-function buildFollowupHtml(scenario, context) {
+function buildFollowupHtml(scenario, context, oralIntent) {
   const enough = contextCompleteness(context) >= 3;
-  const questions = followupQuestions(scenario);
+  const questions = followupQuestions(scenario, undefined, oralIntent);
   return `
     <div class="reading-block followup-block">
       <strong>想让结果更准，可以补充这些</strong>
@@ -1493,19 +1613,23 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
 }
 
 function generateReading({ topic, question, main, changed, values, najia, changedNajia, changeRelations, emptyBranches, userContext = {} }) {
-  const topicInfo = TOPIC_TEXT[topic];
+  const firstAnalysis = analyzeQuestion(question, topic);
+  const effectiveTopic = topic === "general" && firstAnalysis.oralIntent?.topic
+    ? firstAnalysis.oralIntent.topic
+    : topic;
+  const topicInfo = TOPIC_TEXT[effectiveTopic] || TOPIC_TEXT[topic];
   const moving = movingSummary(values);
-  const analysis = analyzeQuestion(question, topic);
+  const analysis = effectiveTopic === topic ? firstAnalysis : analyzeQuestion(question, effectiveTopic);
   const movingLines = getMovingLines(values);
   const mainAction = HEX_ACTIONS[main.name] || { score: 0, plain: HEX_HINTS[main.name] || "局面中性，重在结合现实条件。" };
   const changedAction = HEX_ACTIONS[changed.name] || { score: 0, plain: HEX_HINTS[changed.name] || "后续趋势还需要观察。" };
   const upper = TRIGRAMS[main.upper];
   const lower = TRIGRAMS[main.lower];
   const score = mainAction.score + Math.round(changedAction.score * 0.6);
-  const scenario = detectScenario(topic, question, userContext);
-  const verdict = verdictFromScore(score, movingLines.length, topic, analysis, scenario);
-  const actions = actionList(topic, analysis, verdict, userContext, scenario);
-  const najiaSummary = summarizeNajia(najia, topic, analysis);
+  const scenario = detectScenario(effectiveTopic, question, userContext);
+  const verdict = verdictFromScore(score, movingLines.length, effectiveTopic, analysis, scenario);
+  const actions = actionList(effectiveTopic, analysis, verdict, userContext, scenario);
+  const najiaSummary = summarizeNajia(najia, effectiveTopic, analysis);
   const changeText = changeRelations.length
     ? changeRelations.map((item) => `第${item.index + 1}爻${item.relation}：${item.from.relation}${item.from.branch}${item.from.element} → ${item.to.relation}${item.to.branch}${item.to.element}`).join("；")
     : "无动爻，本卦不变，重点看当前状态是否稳定。";
@@ -1515,7 +1639,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
     : "没有动爻，说明这件事短期更像稳定观察局，不适合频繁改策略。";
 
   const questionText = analysis.hasQuestion
-    ? `你问的是：「${analysis.original}」。我先把它理解为：${analysis.intent}。`
+    ? `你问的是：「${analysis.original}」。${analysis.oralIntent ? `我先把这句口语理解为：${analysis.oralIntent.normalized}` : `我先把它理解为：${analysis.intent}。`}`
     : `你没有填写具体问题，所以只能按「${topicInfo.name}」做粗读。想让解读更贴合，最好写成“我想做X，担心Y，接下来Z天该不该行动？”`;
   const contextCount = contextCompleteness(userContext);
   const contextText = contextCount
@@ -1541,20 +1665,26 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>${scenarioPlainAdvice(scenario)} 这一卦更适合看当前节奏和风险，不适合替你直接定结果。真正落到现实里，还要看沟通、证据、条件和后路是否站得住。</p>
       </div>`
     : "";
-  const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict, scenario);
-  const followupHtml = buildFollowupHtml(scenario, userContext);
+  const contextInsightHtml = buildContextInsightHtml(effectiveTopic, userContext, verdict, scenario);
+  const oralIntentHtml = analysis.oralIntent
+    ? `<div class="reading-block oral-intent-block">
+        <strong>我先按这个意思来断</strong>
+        <p>${analysis.oralIntent.focus}</p>
+      </div>`
+    : "";
+  const followupHtml = buildFollowupHtml(scenario, userContext, analysis.oralIntent);
   const glossaryHtml = buildGlossaryHtml();
-  const lostHtml = topic === "lost"
+  const lostHtml = effectiveTopic === "lost"
     ? buildLostItemReading({ main, najia, najiaSummary, changeRelations, userContext })
     : "";
-  const plainFrameText = topic === "lost"
+  const plainFrameText = effectiveTopic === "lost"
     ? "找失物时，重点不是问玄不玄，而是把卦象转成寻找路线。"
     : scenario.highCommitment
       ? "这次不是让你马上做终身或高代价决定，而是提醒你先看清责任、证据、风险和后路。"
       : scenario.key === "product"
         ? "这次不是让你一次性大改，而是提醒你先找出用户卡点，再做最小版本验证。"
         : "这次不是让你马上押注，而是提醒你：先看清当前局面，再用可承受的动作验证。";
-  const bothSideText = topic === "lost"
+  const bothSideText = effectiveTopic === "lost"
     ? "物品更像在自己控制范围内，还是已经进入外部环境。"
     : scenario.highCommitment
       ? "你能不能承担后果，外部条件是否真实支持。"
@@ -1568,6 +1698,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>${questionText}</p>
         <p>${contextText}</p>
       </div>
+      ${oralIntentHtml}
       <div class="reading-block">
         <strong>结论先说</strong>
         <p>这卦给出的倾向是：<b>${verdict.level}</b>。${verdict.tone}</p>
