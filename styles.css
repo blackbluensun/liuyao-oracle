@@ -534,6 +534,58 @@ h3 {
   background: var(--gold);
 }
 
+.followup-block {
+  border-color: rgba(0, 113, 227, 0.22);
+  background: rgba(0, 113, 227, 0.065);
+}
+
+.followup-block strong::before {
+  background: var(--blue);
+}
+
+.glossary-block {
+  color: var(--muted);
+}
+
+.glossary-block summary {
+  cursor: pointer;
+  color: var(--blue-dark);
+  font-weight: 800;
+}
+
+.glossary-block ul {
+  margin-top: 12px;
+}
+
+.feedback-box {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.feedback-box p {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-weight: 800;
+}
+
+.feedback-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.feedback-chip {
+  min-height: auto;
+  padding: 9px 13px;
+  border: 1px solid rgba(0, 113, 227, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--blue-dark);
+  box-shadow: none;
+}
+
 .tip-box {
   margin: 16px 0;
   padding: 14px 16px;

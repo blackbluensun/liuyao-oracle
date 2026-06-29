@@ -199,10 +199,38 @@ const QUESTION_PATTERNS = [
   },
   {
     key: "move",
-    patterns: ["搬家", "租房", "去", "留下", "广州", "深圳", "换房", "出发"],
+    patterns: ["搬家", "租房", "去", "留下", "广州", "深圳", "换房", "出发", "回老家", "城市", "通勤"],
     intent: "判断去留行动",
     good: "适合先踩点或做可撤回的短行动。",
     bad: "暂缓最终决定，先确认成本、路线和后路。",
+  },
+  {
+    key: "travel",
+    patterns: ["出远门", "出行", "旅行", "旅游", "改期", "机票", "高铁", "酒店", "陌生城市", "安全吗"],
+    intent: "判断出行安全与行程节奏",
+    good: "可以准备出行，但要确认路线、天气、证件和备用方案。",
+    bad: "先排除安全、交通、预算和临时变动风险，再决定是否出发。",
+  },
+  {
+    key: "study",
+    patterns: ["考研", "考公", "考试", "证书", "上岸", "复习", "学习", "成绩", "毕业"],
+    intent: "判断学习考试与备考节奏",
+    good: "重点看执行计划、复习反馈和时间分配。",
+    bad: "先补复习清单和时间表，不要只问结果。",
+  },
+  {
+    key: "shopping",
+    patterns: ["分期", "相机", "手机", "电脑", "买一台", "会不会后悔", "消费", "医美", "很贵"],
+    intent: "判断消费是否值得",
+    good: "先看它是否是真需求、生产力工具，还是情绪消费。",
+    bad: "先保现金流，延迟决定，避免用消费缓解焦虑。",
+  },
+  {
+    key: "product",
+    patterns: ["网站", "工具", "付费功能", "会员", "重做交互", "用户看不懂", "功能", "产品", "商业化", "转化"],
+    intent: "判断产品功能与商业化方向",
+    good: "适合先用小版本验证用户是否真的需要。",
+    bad: "不要直接大改，先找出用户卡在哪一步。",
   },
   {
     key: "lost",
@@ -1235,6 +1263,24 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["合同", "协议", "签约", "起诉", "仲裁", "律师", "赔偿", "违约", "纠纷"])) {
     return { key: "legal", label: "合同/法律", highCommitment: true, caution: "合同法律问题请保留证据并咨询专业人士。" };
   }
+  if (hasAny(["出远门", "出行", "旅行", "旅游", "改期", "机票", "高铁", "酒店", "陌生城市", "安全吗"])) {
+    return { key: "travel", label: "出行/安全", highCommitment: false };
+  }
+  if (hasAny(["考研", "考公", "考试", "证书", "上岸", "复习", "学习", "成绩", "毕业"])) {
+    return { key: "study", label: "学习/考试", highCommitment: false };
+  }
+  if (hasAny(["分期", "相机", "手机", "电脑", "买一台", "会不会后悔", "消费"])) {
+    return { key: "shopping", label: "消费/现金流", highCommitment: false };
+  }
+  if (hasAny(["医美", "整形", "美容项目", "注射", "手术项目"])) {
+    return { key: "beautyMedical", label: "医美/消费健康", highCommitment: true, caution: "医美同时涉及健康和消费，请优先确认资质、风险、恢复期和真实必要性。" };
+  }
+  if (hasAny(["回老家", "城市", "去外地", "留下", "留在", "发展", "通勤"])) {
+    return { key: "city", label: "城市/去留", highCommitment: true };
+  }
+  if (hasAny(["网站", "工具", "付费功能", "会员", "重做交互", "用户看不懂", "功能", "产品", "商业化", "转化"])) {
+    return { key: "product", label: "产品/商业化", highCommitment: false };
+  }
   return { key: "normal", label: "普通问题", highCommitment: false };
 }
 
@@ -1253,6 +1299,34 @@ function adaptVerdictForScenario(base, scenario, adjusted) {
     return { level: "找回阻力偏大", tone: "先保留证据、询问相关人员，必要时联系场所、物业或平台客服。" };
   }
 
+  if (scenario?.key === "travel") {
+    if (adjusted >= 3) return { level: "可以出行", tone: "但要提前确认交通、天气、证件、住宿和备用方案。" };
+    if (adjusted >= 1) return { level: "谨慎出行", tone: "不是不能去，而是要先排除安全、路线和临时变动风险。" };
+    if (adjusted >= -1) return { level: "先查清再定", tone: "当前信息不足，建议先确认行程必要性、交通和应急方案。" };
+    return { level: "考虑改期", tone: "卦象提示阻力偏高，若不是必须出行，优先保安全与稳定。" };
+  }
+
+  if (scenario?.key === "study") {
+    if (adjusted >= 3) return { level: "可以冲刺", tone: "重点不是只看能不能上岸，而是把复习计划、错题反馈和执行节奏落下来。" };
+    if (adjusted >= 1) return { level: "稳步准备", tone: "有推进空间，但需要用具体学习量和阶段反馈验证。" };
+    if (adjusted >= -1) return { level: "先补短板", tone: "当前不适合只问结果，先找出薄弱科目和每天可执行的复习量。" };
+    return { level: "先稳节奏", tone: "消耗或阻力偏高，先恢复作息、重排计划，再谈冲刺。" };
+  }
+
+  if (scenario?.key === "shopping") {
+    if (adjusted >= 3) return { level: "可以考虑", tone: "但先确认它是真需求或生产力工具，而不是情绪消费。" };
+    if (adjusted >= 1) return { level: "延迟确认", tone: "建议至少等24小时，算清分期、现金流和替代方案。" };
+    if (adjusted >= -1) return { level: "先别急买", tone: "当前更适合保现金流，先确认买完是否影响生活费、房租或还款。" };
+    return { level: "不宜冲动消费", tone: "卦象提示消耗偏高，容易买完短暂开心、后续压力变大。" };
+  }
+
+  if (scenario?.key === "product") {
+    if (adjusted >= 3) return { level: "可以做小版本", tone: "先验证一个明确目标：理解率、留存、转化或付费意愿，不要一次大改。" };
+    if (adjusted >= 1) return { level: "先小改测试", tone: "方向有可试空间，但要先找出用户到底卡在哪一步。" };
+    if (adjusted >= -1) return { level: "先访谈再改", tone: "当前信息还不够，建议先收集真实用户反馈，再决定功能优先级。" };
+    return { level: "暂缓大改", tone: "不要用大改版掩盖问题不清，先收敛目标和用户路径。" };
+  }
+
   if (scenario?.highCommitment) {
     const caution = scenario.caution ? ` ${scenario.caution}` : "";
     if (adjusted >= 3) return { level: "可以继续评估", tone: `但这是${scenario.label}问题，不能只凭卦象拍板，要同时看现实证据、成本、后路和专业意见。${caution}` };
@@ -1262,6 +1336,80 @@ function adaptVerdictForScenario(base, scenario, adjusted) {
   }
 
   return base;
+}
+
+function scenarioPlainAdvice(scenario) {
+  const map = {
+    marriage: "看婚姻不要只看感情浓度，要看长期责任、现实条件和冲突处理。",
+    relationshipBreak: "感情重大选择先看对方行动和你的稳定感，不要只看一时回应。",
+    house: "房产问题先看现金流、贷款压力、合同和最坏情况。",
+    job: "职业去留先看后路、现金流、下家确定性和身心承受力。",
+    investment: "钱财风险先看本金安全、杠杆、退出机制和你能不能承受亏损。",
+    medical: "健康问题优先现实检查，卦象只能提醒节奏，不能替代医生。",
+    legal: "合同法律问题优先证据、条款和专业意见，卦象不能替代法律判断。",
+    travel: "出行问题先看安全、天气、证件、交通和备用方案。",
+    study: "考试问题不只看结果，更看复习节奏、错题反馈和时间分配。",
+    shopping: "消费问题先分清刚需、生产力工具和情绪补偿。",
+    beautyMedical: "医美问题同时看健康风险和消费压力，资质与恢复期优先。",
+    city: "城市去留要同时看机会、成本、通勤、人脉和身心状态。",
+    product: "产品问题先看用户卡点和最小验证，不要一上来大改。",
+    lost: "找失物先看最后出现地点，再按方位、环境、材质和是否被人接触过排查。",
+    normal: "问题越具体，断卦越能落到行动上。",
+  };
+  return map[scenario?.key] || map.normal;
+}
+
+function followupQuestions(scenario, topic) {
+  const map = {
+    marriage: ["你们在一起多久了？", "当前最大矛盾是钱、父母、居住、孩子，还是信任？", "你想看三个月内推进，还是长期婚姻质量？"],
+    relationshipBreak: ["你们现在是否还联系？", "对方有没有持续行动，而不是偶尔回应？", "你最想判断复合、放下，还是主动联系？"],
+    house: ["首付后还剩几个月生活费？", "贷款月供占收入多少？", "合同、产权、地段和退出方案是否确认？"],
+    job: ["你是否已有下家或现金缓冲？", "辞职是为了机会，还是为了逃离消耗？", "最坏几个月没收入能否承受？"],
+    investment: ["投入金额占你存款多少？", "是否借钱或加杠杆？", "亏到多少你会停止？"],
+    medical: ["症状持续多久了？", "是否已经做过检查或咨询医生？", "有没有胸痛、呼吸困难、严重失眠等需要立即处理的信号？"],
+    legal: ["有没有合同、聊天记录、付款记录？", "你的诉求是退款、赔偿、解约还是维权？", "是否咨询过律师或平台客服？"],
+    travel: ["出行目的是否必须？", "天气、证件、交通、住宿是否确认？", "有没有备用路线和紧急联系人？"],
+    study: ["离考试还有多久？", "当前完成率和薄弱科目是什么？", "每天能稳定学习几小时？"],
+    shopping: ["这是刚需、生产力工具，还是情绪消费？", "买完是否影响房租/生活费/还款？", "能否延迟24小时再决定？"],
+    beautyMedical: ["机构和医生资质是否确认？", "恢复期和风险你是否能接受？", "这笔钱是否会影响现金流？"],
+    city: ["新城市/老家的收入机会是什么？", "生活成本和通勤成本是多少？", "三个月后不适合能否撤回？"],
+    product: ["用户具体在哪一步看不懂？", "你要验证的是留存、转化、付费，还是理解成本？", "能否先改一个最小版本测试？"],
+    lost: ["最后一次看到在哪里？", "期间谁可能接触过？", "是否需要先挂失、报警或联系场所？"],
+    normal: ["这件事的时间范围是多久？", "你最担心的结果是什么？", "你现在已经掌握哪些现实信息？"],
+  };
+  return map[scenario?.key] || map[topic] || map.normal;
+}
+
+function buildFollowupHtml(scenario, context) {
+  const enough = contextCompleteness(context) >= 3;
+  const questions = followupQuestions(scenario);
+  return `
+    <div class="reading-block followup-block">
+      <strong>想让结果更准，可以补充这些</strong>
+      <p>${enough ? "你已经补充了一些背景，下面这些问题可用于继续精细化判断。" : "你目前只写了主问题，系统可以先断大方向；如果要更贴题，建议补充下面几项。"}</p>
+      <ul>${questions.map((item) => `<li>${item}</li>`).join("")}</ul>
+    </div>
+  `;
+}
+
+function buildGlossaryHtml() {
+  const items = [
+    ["世爻", PLAIN_GLOSSARY.世爻],
+    ["应爻", PLAIN_GLOSSARY.应爻],
+    ["用神", "这次问题最该看的核心点，不同问题用神不同。"],
+    ["动爻", "正在变化的位置，代表事情哪里开始动、哪里容易出变量。"],
+    ["空亡", PLAIN_GLOSSARY.空亡],
+    ["月建", PLAIN_GLOSSARY.月建],
+    ["日辰", PLAIN_GLOSSARY.日辰],
+    ["回头生", "变化后反过来帮助原来的用神，通常代表后续有补力。"],
+    ["回头克", "变化后反过来压制原来的用神，通常代表后续有压力。"],
+  ];
+  return `
+    <details class="reading-block glossary-block">
+      <summary>看不懂术语？点这里看注释</summary>
+      <ul>${items.map(([k, v]) => `<li><b>${k}</b>：${v}</li>`).join("")}</ul>
+    </details>
+  `;
 }
 
 function verdictFromScore(score, movingCount, topic, analysis, scenario) {
@@ -1294,6 +1442,22 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
     list.push("把关键证据写下来：钱、合同、对方承诺、时间节点、责任边界，不要只凭感觉判断。");
     if (scenario.caution) list.push(scenario.caution);
   }
+  if (scenario?.key === "travel") {
+    list.push("先确认四件事：天气、交通、证件、住宿；任何一项不确定，都准备备用方案。");
+    list.push("如果不是必须出行，遇到身体不适、天气异常或路线不稳，可以优先改期。");
+  }
+  if (scenario?.key === "study") {
+    list.push("把目标拆成复习清单：每天学什么、做多少题、错题怎么复盘。");
+    list.push("不要只问能不能上岸，先用7天完成率判断计划是否真实可执行。");
+  }
+  if (scenario?.key === "shopping") {
+    list.push("先延迟24小时，再写下购买理由、替代方案、分期总成本和是否影响现金流。");
+    list.push("如果它不能提升收入、效率或真实生活质量，就先不要用消费缓解焦虑。");
+  }
+  if (scenario?.key === "product") {
+    list.push("先问3个真实用户：哪一步看不懂、哪里想退出、他们最想要什么结果。");
+    list.push("只改一个最小版本，用理解率、停留时间、转化或付费意愿来复盘。");
+  }
   if (analysis.matchedKeys.includes("business")) {
     list.push("把目标缩小成一个动作：发一篇、问一个供应商、测一个价格，不要同时做完整品牌。");
   }
@@ -1324,7 +1488,7 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
   if (context.fear) {
     list.push(`把你最担心的点「${context.fear}」写成检查清单，先排除最容易出事的一项。`);
   }
-  list.push("给这件事设一个复盘时间：24小时或3天后再看结果，不要反复无限想。");
+  list.push(scenario?.highCommitment ? "给这件事设一个复盘时间：3天或7天后再看现实信息有没有变清楚，不要靠反复起卦替代沟通和证据。" : "给这件事设一个复盘时间：24小时或3天后再看结果，不要反复无限想。");
   return list;
 }
 
@@ -1378,9 +1542,23 @@ function generateReading({ topic, question, main, changed, values, najia, change
       </div>`
     : "";
   const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict, scenario);
+  const followupHtml = buildFollowupHtml(scenario, userContext);
+  const glossaryHtml = buildGlossaryHtml();
   const lostHtml = topic === "lost"
     ? buildLostItemReading({ main, najia, najiaSummary, changeRelations, userContext })
     : "";
+  const plainFrameText = topic === "lost"
+    ? "找失物时，重点不是问玄不玄，而是把卦象转成寻找路线。"
+    : scenario.highCommitment
+      ? "这次不是让你马上做终身或高代价决定，而是提醒你先看清责任、证据、风险和后路。"
+      : scenario.key === "product"
+        ? "这次不是让你一次性大改，而是提醒你先找出用户卡点，再做最小版本验证。"
+        : "这次不是让你马上押注，而是提醒你：先看清当前局面，再用可承受的动作验证。";
+  const bothSideText = topic === "lost"
+    ? "物品更像在自己控制范围内，还是已经进入外部环境。"
+    : scenario.highCommitment
+      ? "你能不能承担后果，外部条件是否真实支持。"
+      : "你有没有承受力，外部有没有真实反馈。";
 
   return {
     tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
@@ -1396,10 +1574,11 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>如果只看卦象：本卦「${main.name}」表示当前局面——${mainAction.plain}；变卦「${changed.name}」表示后续变化——${changedAction.plain}</p>
       </div>
       ${scenarioNotice}
+      ${followupHtml}
       <div class="reading-block">
         <strong>这卦到底在说什么</strong>
-        <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。${topic === "lost" ? "找失物时，重点不是问玄不玄，而是把卦象转成寻找路线。" : "这次不是让你马上押注，而是提醒你：先看清当前局面，再用小动作验证。"}</p>
-        <p>${userSide}；${outsideSide}。所以这件事要同时看两边：${topic === "lost" ? "物品更像在自己控制范围内，还是已经进入外部环境。" : "你有没有承受力，外部有没有真实反馈。"}</p>
+        <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。${plainFrameText}</p>
+        <p>${userSide}；${outsideSide}。所以这件事要同时看两边：${bothSideText}</p>
       </div>
       ${lostHtml}
       <div class="reading-block">
@@ -1417,16 +1596,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>${changeText}</p>
         <p>你可以把动爻理解成“事情正在变化的地方”。如果出现回头生，代表后续有补力；如果出现回头克，代表后续会反过来形成压力。</p>
       </div>
-      <div class="reading-block">
-        <strong>术语翻译</strong>
-        <ul>
-          <li><b>世爻</b>：${PLAIN_GLOSSARY.世爻}</li>
-          <li><b>应爻</b>：${PLAIN_GLOSSARY.应爻}</li>
-          <li><b>用神</b>：这次问题最该看的那个爻，不同问题看的点不同。</li>
-          <li><b>空亡</b>：${PLAIN_GLOSSARY.空亡}</li>
-          <li><b>月建 / 日辰</b>：${PLAIN_GLOSSARY.月建} ${PLAIN_GLOSSARY.日辰}</li>
-        </ul>
-      </div>
+      ${glossaryHtml}
       <div class="reading-block">
         <strong>风险点 / 有利点</strong>
         ${
@@ -1444,7 +1614,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
       </div>
       <div class="reading-block">
         <strong>${userContext.timeframe || "7天内"}的判断口径</strong>
-        <p>${scenario.highCommitment ? "这次适合看当前关系/局势的风险和节奏，不适合直接替你决定终身或高代价结果。到时间后重点复盘：现实问题是否更清楚、对方是否承担责任、风险是否下降、你是否更稳定。" : "这次更适合看短期趋势，不适合直接推导长期命运。你可以按上面的动作做一个小测试，到时间后用真实反馈复盘：有没有询单、有没有成交、有没有成本失控、你的状态有没有更稳。"}</p>
+        <p>${scenario.highCommitment ? "这次适合看当前关系/局势的风险和节奏，不适合直接替你决定终身或高代价结果。到时间后重点复盘：现实问题是否更清楚、对方是否承担责任、风险是否下降、你是否更稳定。" : "这次更适合看短期趋势，不适合直接推导长期命运。你可以按上面的建议做一次可承受的验证，到时间后用真实反馈复盘：结果有没有更清楚、成本有没有失控、你的状态有没有更稳。"}</p>
       </div>
     `,
   };
@@ -1534,6 +1704,17 @@ function renderReadingFromCurrentCast(options = {}) {
   } else {
     $("readingNotice").classList.add("hidden");
   }
+}
+
+function handleFeedback(value) {
+  const text = {
+    understood: "收到：如果你觉得看懂了，可以按“建议这样做”执行，并在设定时间后回来复盘。",
+    confusing: "收到：建议先点开“术语注释”，或者在补充信息里用自己的话写清楚处境后重新解读。",
+    generic: "收到：这通常是因为问题或背景太宽泛。请补充时间范围、现实处境和最担心的结果。",
+    offtopic: "收到：请在补充信息里写清楚你真正想判断的核心结果，系统会重新组织解读。",
+  }[value] || "已记录你的反馈。";
+  $("feedbackNotice").textContent = text;
+  $("feedbackNotice").classList.remove("hidden");
 }
 
 function updateTopicUI() {
@@ -1656,6 +1837,9 @@ function init() {
   });
   $("topic").addEventListener("change", updateTopicUI);
   $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
+  document.querySelectorAll(".feedback-chip").forEach((button) => {
+    button.addEventListener("click", () => handleFeedback(button.dataset.feedback));
+  });
   document.querySelectorAll(".example-chip").forEach((button) => {
     button.addEventListener("click", () => {
       $("topic").value = button.dataset.topic || "general";
