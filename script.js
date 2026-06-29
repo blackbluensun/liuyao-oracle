@@ -1581,7 +1581,7 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["考研", "考公", "考试", "证书", "上岸", "复习", "学习", "成绩", "毕业"])) {
     return { key: "study", label: "学习/考试", highCommitment: false };
   }
-  if (hasAny(["分期", "相机", "手机", "电脑", "买一台", "会不会后悔", "消费", "二手", "优惠", "办卡", "会员", "课程", "闲置", "值不值得买"])) {
+  if (hasAny(["分期", "相机", "手机", "电脑", "买一台", "买车", "买包", "买衣服", "买鞋", "会不会后悔", "消费", "二手", "优惠", "办卡", "会员", "课程", "闲置", "值不值得买"])) {
     return { key: "shopping", label: "消费/现金流", highCommitment: false };
   }
   if (hasAny(["医美", "整形", "美容项目", "注射", "手术项目"])) {
