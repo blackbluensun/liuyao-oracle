@@ -1446,7 +1446,7 @@ function detectScenario(topic, question, context = {}) {
   if (topic === "lost" || hasAny(["丢了", "丢哪", "丢哪里", "不见了", "找不到", "找回来", "失物", "遗失"])) {
     return { key: "lost", label: "找失物", highCommitment: false };
   }
-  if (hasAny(["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "见父母", "适合结婚", "合适结婚"])) {
+  if (hasAny(["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "见父母", "催婚", "适合结婚", "合适结婚"])) {
     return { key: "marriage", label: "结婚/长期关系", highCommitment: true };
   }
   if (hasAny(["离婚", "分手", "复合", "出轨", "冷战", "前任"])) {
@@ -1461,7 +1461,7 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["投资", "股票", "基金", "比特币", "币圈", "杠杆", "合约", "借钱", "贷款", "负债", "信用卡"])) {
     return { key: "investment", label: "钱财风险", highCommitment: true };
   }
-  if (hasAny(["手术", "治疗", "医院", "体检", "怀孕", "生病", "抑郁", "自杀", "轻生"])) {
+  if (hasAny(["手术", "治疗", "医院", "体检", "怀孕", "生病", "身体出问题", "不舒服", "失眠", "睡不着", "心慌", "头痛", "胃痛", "抑郁", "自杀", "轻生"])) {
     return { key: "medical", label: "健康/医疗", highCommitment: true, caution: "健康问题请优先咨询医生或专业机构。" };
   }
   if (hasAny(["合同", "协议", "签约", "起诉", "仲裁", "律师", "赔偿", "违约", "纠纷"])) {
@@ -1476,7 +1476,7 @@ function detectScenario(topic, question, context = {}) {
   if (hasAny(["穿什么颜色", "适合什么颜色", "今天穿什么色", "颜色搭配", "幸运色", "黑色", "白色", "蓝色", "红色", "绿色", "粉色", "黄色", "灰色"])) {
     return { key: "wearColor", label: "穿什么颜色", highCommitment: false };
   }
-  if (hasAny(["穿什么衣服", "穿搭", "搭配", "裙子", "裤子", "外套", "约会穿", "面试穿", "见朋友穿", "见家长穿", "拍照穿"])) {
+  if (hasAny(["穿什么衣服", "怎么穿", "怎么搭", "穿搭", "搭配", "裙子", "裤子", "外套", "约会穿", "约会怎么穿", "面试穿", "见朋友穿", "见家长穿", "拍照穿"])) {
     return { key: "outfitStyle", label: "穿什么衣服", highCommitment: false };
   }
   if (hasAny(["今天运势", "今天状态", "今天适合干嘛", "今天要注意什么", "心情不好", "没精神", "想放松", "休息"])) {
@@ -1484,6 +1484,18 @@ function detectScenario(topic, question, context = {}) {
   }
   if (hasAny(["出远门", "出行", "旅行", "旅游", "改期", "机票", "高铁", "酒店", "陌生城市", "安全吗"])) {
     return { key: "travel", label: "出行/安全", highCommitment: false };
+  }
+  if (hasAny(["猫", "狗", "宠物", "养猫", "养狗", "猫粮", "猫砂", "宠物医院", "绝育"])) {
+    return { key: "pet", label: "宠物/陪伴动物", highCommitment: false };
+  }
+  if (hasAny(["租房", "房子能不能租", "这个房子", "搬家", "房东", "合租", "室友", "押金", "公寓", "小区", "通勤"])) {
+    return { key: "housing", label: "租房/居住", highCommitment: false };
+  }
+  if (hasAny(["父母", "妈妈", "爸爸", "家里", "家庭", "亲戚", "催婚", "催工作", "回家", "原生家庭"])) {
+    return { key: "family", label: "家庭/父母", highCommitment: false };
+  }
+  if (hasAny(["朋友", "闺蜜", "兄弟", "社交", "孤独", "被冷落", "不回消息", "拉黑", "聚会", "圈子"])) {
+    return { key: "friendship", label: "朋友/社交", highCommitment: false };
   }
   if (hasAny(["考研", "考公", "考试", "证书", "上岸", "复习", "学习", "成绩", "毕业"])) {
     return { key: "study", label: "学习/考试", highCommitment: false };
@@ -1580,6 +1592,10 @@ function scenarioPlainAdvice(scenario) {
     medical: "健康问题优先现实检查，卦象只能提醒节奏，不能替代医生。",
     legal: "合同法律问题优先证据、条款和专业意见，卦象不能替代法律判断。",
     travel: "出行问题先看安全、天气、证件、交通和备用方案。",
+    housing: "租房居住先看总成本、安全、通勤、合同、室友和退租规则。",
+    pet: "宠物问题先看照顾条件、医疗预算、居住环境和长期责任。",
+    family: "家庭问题先看边界、沟通方式和你能承受到哪里。",
+    friendship: "朋友社交先看双方投入是否对等，以及这段关系是否让你更轻松。",
     study: "考试问题不只看结果，更看复习节奏、错题反馈和时间分配。",
     shopping: "消费问题先分清刚需、生产力工具和情绪补偿。",
     eatDaily: "吃饭问题看身体、距离、预算和同行人口味，不需要断成大事。",
@@ -1607,6 +1623,10 @@ function followupQuestions(scenario, topic, oralIntent) {
     medical: ["症状持续多久了？", "是否已经做过检查或咨询医生？", "有没有胸痛、呼吸困难、严重失眠等需要立即处理的信号？"],
     legal: ["有没有合同、聊天记录、付款记录？", "你的诉求是退款、赔偿、解约还是维权？", "是否咨询过律师或平台客服？"],
     travel: ["出行目的是否必须？", "天气、证件、交通、住宿是否确认？", "有没有备用路线和紧急联系人？"],
+    housing: ["总费用包含房租、水电、管理费和押金吗？", "通勤、安全、噪音、采光、退租规则是否确认？", "如果住进去不合适，撤回成本大不大？"],
+    pet: ["预算、时间、空间和医疗应急费用是否够？", "房东/家人/室友是否接受？", "这件事对宠物长期稳定是否有帮助？"],
+    family: ["对方具体要求是什么？", "你能接受到哪里，哪条边界不能退？", "这次沟通是想解决问题，还是只是释放情绪？"],
+    friendship: ["对方是否持续回应和尊重边界？", "这段关系让你更轻松还是更内耗？", "你想修复关系，还是判断要不要拉开距离？"],
     study: ["离考试还有多久？", "当前完成率和薄弱科目是什么？", "每天能稳定学习几小时？"],
     shopping: ["这是刚需、生产力工具，还是情绪消费？", "买完是否影响房租/生活费/还款？", "能否延迟24小时再决定？"],
     eatDaily: ["你现在更想吃清淡、热乎、重口，还是方便？", "是一个人吃，还是和别人一起？", "预算和距离有没有限制？"],
@@ -1688,6 +1708,22 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
   if (scenario?.key === "travel") {
     list.push("先确认四件事：天气、交通、证件、住宿；任何一项不确定，都准备备用方案。");
     list.push("如果不是必须出行，遇到身体不适、天气异常或路线不稳，可以优先改期。");
+  }
+  if (scenario?.key === "housing") {
+    list.push("先算真实总费用：房租、水电、管理费、押金、通勤成本，不要只看月租数字。");
+    list.push("看房时重点查安全、噪音、采光、潮湿、退租规则，以及是否能接受室友/房东。");
+  }
+  if (scenario?.key === "pet") {
+    list.push("先确认长期照顾条件：预算、时间、空间、医疗应急费用和居住规则。");
+    list.push("如果涉及搬家或治疗，优先选择对宠物更稳定、更安全的方案。");
+  }
+  if (scenario?.key === "family") {
+    list.push("先把家庭压力拆成事实和情绪：对方具体要求是什么，你能接受到哪里。");
+    list.push("重要边界用平静但明确的话说出来，不要在情绪爆炸时做最终决定。");
+  }
+  if (scenario?.key === "friendship") {
+    list.push("先看双方投入是否对等：回应、尊重、主动、边界，而不是只看一两句话。");
+    list.push("如果关系让你长期内耗，可以先减少投入，观察对方是否愿意修复。");
   }
   if (scenario?.key === "study") {
     list.push("把目标拆成复习清单：每天学什么、做多少题、错题怎么复盘。");
