@@ -1,3 +1,7 @@
+// 把你的腾讯问卷公开链接填到这里即可启用真实反馈收集。
+// 例如：https://wj.qq.com/s2/xxxxxx/xxxx/
+const FEEDBACK_FORM_URL = "";
+
 const TRIGRAMS = {
   0: { name: "坤", nature: "地", trait: "承载、稳定、顺势" },
   1: { name: "震", nature: "雷", trait: "启动、变化、惊动" },
@@ -1707,13 +1711,34 @@ function renderReadingFromCurrentCast(options = {}) {
 }
 
 function handleFeedback(value) {
+  const label = {
+    understood: "看懂了",
+    confusing: "看不懂",
+    generic: "太泛了",
+    offtopic: "不贴题",
+  }[value] || "其他反馈";
   const text = {
     understood: "收到：如果你觉得看懂了，可以按“建议这样做”执行，并在设定时间后回来复盘。",
     confusing: "收到：建议先点开“术语注释”，或者在补充信息里用自己的话写清楚处境后重新解读。",
     generic: "收到：这通常是因为问题或背景太宽泛。请补充时间范围、现实处境和最担心的结果。",
     offtopic: "收到：请在补充信息里写清楚你真正想判断的核心结果，系统会重新组织解读。",
   }[value] || "已记录你的反馈。";
-  $("feedbackNotice").textContent = text;
+  const formLink = $("feedbackFormLink");
+  if (FEEDBACK_FORM_URL) {
+    const params = new URLSearchParams({
+      feedback: label,
+      question: currentCast?.question || "",
+      tag: $("readingTag")?.textContent || "",
+    });
+    const joiner = FEEDBACK_FORM_URL.includes("?") ? "&" : "?";
+    formLink.href = `${FEEDBACK_FORM_URL}${joiner}${params.toString()}`;
+    formLink.textContent = `继续填写详细反馈（${label}）`;
+    formLink.classList.remove("hidden");
+    $("feedbackNotice").textContent = `${text} 如果你愿意，也可以点下面的问卷把具体感受发给站长。`;
+  } else {
+    formLink.classList.add("hidden");
+    $("feedbackNotice").textContent = `${text} 站长还没有配置腾讯问卷链接，暂时只能在本页提示，不能真正收到你的反馈。`;
+  }
   $("feedbackNotice").classList.remove("hidden");
 }
 
