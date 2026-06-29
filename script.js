@@ -166,14 +166,14 @@ const QUESTION_PATTERNS = [
     key: "sell",
     patterns: ["卖", "成交", "下单", "客户", "买", "价格", "定价", "订单"],
     intent: "判断成交与钱财",
-    good: "重点看能不能产生真实询单和小额成交。",
-    bad: "重点防止为了成交牺牲利润或售后失控。",
+    good: "重点看是否有人真实需要、是否愿意付出成本。",
+    bad: "重点防止为了促成结果而牺牲底线或承担失控责任。",
   },
   {
     key: "business",
-    patterns: ["创业", "项目", "品牌", "账号", "小红书", "抖音", "选品", "供应链", "一件代发"],
+    patterns: ["创业", "项目", "计划", "方案", "业务", "合作", "投入", "试点", "上线", "开店"],
     intent: "判断项目推进",
-    good: "适合用内容和小样本测试推进。",
+    good: "适合用小范围、可撤回的动作验证推进。",
     bad: "不适合一口气做重资产或长期承诺。",
   },
   {
@@ -304,7 +304,7 @@ const ORAL_INTENT_LIBRARY = [
     phrases: ["能不能回本", "能赚钱吗", "能不能赚", "有没有利润", "会不会亏", "赚不赚钱"],
     normalized: "判断这件事是否有回本或盈利可能，以及成本风险是否可控。",
     focus: "重点看财爻、子孙反馈和兄弟消耗，不只看有没有机会。",
-    followups: ["成本、售价、运费、售后分别是多少？", "有没有真实用户愿意付费？", "最坏亏损你能不能承受？"],
+    followups: ["前期投入、持续成本和回收周期分别是多少？", "有没有真实需求或明确回报路径？", "最坏亏损你能不能承受？"],
   },
   {
     key: "lost_where",
@@ -321,6 +321,46 @@ const ORAL_INTENT_LIBRARY = [
     normalized: "判断当前担心是现实信号，还是情绪放大后的消耗。",
     focus: "重点看世爻、子孙、官鬼和动爻，区分真实风险与心理压力。",
     followups: ["有没有现实证据支持你的担心？", "这个担心持续多久了？", "你现在最需要确认什么？"],
+  },
+  {
+    key: "eat_daily",
+    topic: "general",
+    phrases: ["吃什么", "吃啥", "点什么", "吃哪家", "喝什么", "午饭", "晚饭", "宵夜"],
+    normalized: "判断现在更适合吃什么，重点看身体状态、距离、预算和心情。",
+    focus: "这类问题不需要断成大事，重点是让选择更省心、更舒服。",
+    followups: ["你现在想吃清淡还是重口？", "预算和距离有限制吗？", "是一个人吃还是和别人一起？"],
+  },
+  {
+    key: "play_daily",
+    topic: "general",
+    phrases: ["去哪玩", "去哪里玩", "周末去哪", "约会去哪", "逛哪里", "去哪里逛"],
+    normalized: "判断这次出门更适合去哪类地方，重点看精力、天气、路程和同行体验。",
+    focus: "重点不是安排满，而是选一个能让人真正放松的主地点。",
+    followups: ["你想放松、拍照、聊天、运动，还是尝鲜？", "天气和交通方便吗？", "同行的人更在意什么？"],
+  },
+  {
+    key: "wear_color",
+    topic: "general",
+    phrases: ["穿什么颜色", "什么颜色", "适合什么色", "今天穿什么色", "幸运色"],
+    normalized: "判断今天适合什么颜色氛围，重点看场合、气质和穿着自在感。",
+    focus: "颜色更像氛围提示，不是唯一答案；场合和舒适度要放在前面。",
+    followups: ["今天是什么场合？", "你想显得稳重、清爽、亲和还是有存在感？", "有没有必须避开的颜色？"],
+  },
+  {
+    key: "outfit_daily",
+    topic: "general",
+    phrases: ["穿什么衣服", "怎么穿", "怎么搭", "穿搭", "搭配", "约会穿", "面试穿", "见朋友穿"],
+    normalized: "判断今天更适合什么穿搭方向，重点看场合、舒适度和想表达的感觉。",
+    focus: "先定场合，再定气质关键词；不要为了特别而不舒服。",
+    followups: ["今天要见谁、做什么？", "你想要舒服、正式、可爱、利落，还是拍照好看？", "天气和行动量如何？"],
+  },
+  {
+    key: "daily_mood",
+    topic: "general",
+    phrases: ["今天适合干嘛", "今天要注意什么", "今天运势", "今天状态", "今天怎么样"],
+    normalized: "判断今天适合进攻、整理、休息，还是避免冲动。",
+    focus: "重点是让今天更稳一点，不要把一天的状态夸大成长期命运。",
+    followups: ["今天最重要的一件小事是什么？", "你现在是累、焦虑、兴奋，还是没方向？", "有没有必须完成的现实任务？"],
   },
   {
     key: "future_general",
@@ -397,7 +437,7 @@ const HEX_ACTIONS = {
   "地雷复": { score: 1, plain: "有重新开始的机会，适合小步恢复。" },
   "天雷无妄": { score: 0, plain: "不要妄动，按真实条件做事。" },
   "山天大畜": { score: 1, plain: "先积累能力，不急着放大。" },
-  "山雷颐": { score: 0, plain: "先养人、养内容、养基本盘。" },
+  "山雷颐": { score: 0, plain: "先养人、养条件、养基本盘。" },
   "泽风大过": { score: -2, plain: "压力过载，必须减重。" },
   "坎为水": { score: -2, plain: "风险和压力较多，先控风险。" },
   "离为火": { score: 1, plain: "利曝光表达，但容易焦躁。" },
@@ -857,21 +897,21 @@ const CONTEXT_LIBRARY = [
   },
   {
     key: "newAccount",
-    words: ["新号", "小红书", "抖音", "视频号", "公众号", "没粉丝", "没人买", "没有成交", "没流量", "没人看", "互动", "评论", "私信", "涨粉", "播放量"],
-    title: "账号与表达",
-    meaning: "账号类问题重点不是一开始就爆，而是内容有没有稳定输出、有没有被目标人群理解。",
-    risk: "最怕把一次低数据理解成失败，频繁换方向，导致平台和用户都不知道账号在讲什么。",
-    action: "先连续发同一方向的3到5条内容，每条只测试一个变量：标题、封面、话题、风格或价格。",
-    metric: "复盘时看：浏览、收藏、评论、私信，有没有人问价格或尺码。",
+    words: ["新号", "账号", "平台", "发作品", "发布", "没人看", "没流量", "互动", "评论", "私信", "涨粉", "播放量", "曝光"],
+    title: "账号 / 公开表达",
+    meaning: "账号类问题重点不是一开始就爆，而是表达是否清楚、方向是否稳定、目标人群是否能看懂。",
+    risk: "最怕把一次低反馈理解成失败，频繁换方向，导致别人不知道你到底在表达什么。",
+    action: "先连续做3到5次同一方向的小发布，每次只调整一个变量：标题、开头、图片、话题或表达角度。",
+    metric: "复盘时看：浏览、停留、收藏、评论、私信里是否出现更具体的问题或反馈。",
   },
   {
     key: "productTest",
-    words: ["副业", "创业", "选品", "测款", "一件代发", "供应链", "1688", "样衣", "定价", "包邮", "退换货", "发货", "摆摊", "开店", "项目"],
-    title: "副业 / 创业 / 项目",
+    words: ["副业", "创业", "项目", "计划", "方案", "业务", "合作", "投入", "试点", "试运行", "上线", "开店"],
+    title: "副业 / 项目 / 新计划",
     meaning: "项目类问题要看资源是否真实、风险是否可控。即使卦象可试，也适合先做最小版本。",
     risk: "最怕一上来就投入设备、库存、课程、广告费，结果还没验证需求就被成本拖住。",
-    action: "先做一个不超过承受范围的小测试：问10个人、发3条内容、卖1单、做1个样品。",
-    metric: "复盘时看：有没有真实反馈、有没有人愿意付费、成本和售后是否可控。",
+    action: "先做一个不超过承受范围的小验证：确认一个真实需求、完成一次小范围试运行、拿到一个明确反馈。",
+    metric: "复盘时看：反馈是否真实、成本是否可控、风险是否变小、下一步是否更清楚。",
   },
   {
     key: "mentalLoad",
@@ -905,18 +945,18 @@ const CONTEXT_LIBRARY = [
     words: ["今天", "明天", "3天", "三天", "7天", "一周", "短期"],
     title: "短期判断",
     meaning: "短期卦主要看当下能不能动、动到什么程度，不适合推导长期成败。",
-    risk: "最怕用三天的结果否定三个月的方向。",
-    action: "只设一个短期验证目标，比如发一篇、问一个人、测一个价格。",
+    risk: "最怕用几天的波动否定一个需要时间观察的方向。",
+    action: "只设一个短期验证目标：确认一个事实、完成一个小步骤、观察一次真实反馈。",
     metric: "复盘时看短期反馈，不看最终成败。",
   },
   {
     key: "longTerm",
-    words: ["长期", "未来", "三个月", "半年", "一年", "品牌", "人生", "方向"],
+    words: ["长期", "未来", "三个月", "半年", "一年", "人生", "方向"],
     title: "长期方向",
     meaning: "长期问题更要看趋势和结构，不要期待一卦给出全部答案。适合用来确定节奏，而不是替代规划。",
     risk: "最怕目标太大，导致第一步无法开始。",
-    action: "把长期目标拆成最近7天、30天、90天三个层级。",
-    metric: "复盘时看：这周有没有动作，30天有没有数据，90天有没有稳定模型。",
+    action: "把长期目标拆成最近7天、30天、90天三个层级，每一层只看一个最关键变化。",
+    metric: "复盘时看：最近7天是否有进展，30天是否看到反馈，90天是否形成可持续节奏。",
   },
   {
     key: "careerJob",
@@ -978,7 +1018,7 @@ const CONTEXT_LIBRARY = [
     title: "城市 / 去留 / 发展地点",
     meaning: "城市选择要同时看机会、成本、人脉和身心承受力。不是大城市一定好，也不是回老家一定退步。",
     risk: "最怕只看机会不看生活成本，或者只看便宜忽略长期发展。",
-    action: "列出三个数字：月最低生活费、可获得收入、三个月内能建立的资源。数字不清楚前不要冲动搬迁。",
+    action: "列出三个现实条件：最低生活成本、可获得机会、如果不适合能否撤回。条件不清楚前不要冲动搬迁。",
     metric: "复盘时看：成本是否下降，机会是否增加，状态是否稳定，通勤是否可承受。",
   },
   {
@@ -1054,13 +1094,58 @@ const CONTEXT_LIBRARY = [
     metric: "复盘时看：行程是否可控，预算是否超支，是否有备用方案。",
   },
   {
+    key: "eatDaily",
+    words: ["吃什么", "吃啥", "点外卖", "餐厅", "饭店", "火锅", "烧烤", "奶茶", "咖啡", "晚饭", "午饭", "早餐", "宵夜"],
+    title: "吃什么 / 餐厅选择",
+    meaning: "吃饭类问题不需要断得很重，重点看身体状态、预算、距离和同行人的口味。",
+    risk: "最怕饿着时纠结太久，或者为了情绪满足吃完反而身体不舒服、钱包也不舒服。",
+    action: "先按三个条件筛：近一点、身体舒服、预算可接受。多人同行时优先选大家都能接受的。",
+    metric: "复盘时看：吃完是否舒服，花费是否合适，同行体验是否轻松。",
+  },
+  {
+    key: "whereToPlay",
+    words: ["去哪玩", "去哪里玩", "约会去哪", "周末去哪", "逛街", "看电影", "展览", "公园", "海边", "爬山", "游乐园", "散步", "约朋友"],
+    title: "去哪玩 / 日常出门",
+    meaning: "出门玩的问题重点看当天精力、天气、路程、预算和同行人的配合度。",
+    risk: "最怕为了追求完美安排，把休息日变成赶场，最后大家都累。",
+    action: "先选一个主目的：放松、拍照、聊天、运动或尝鲜。只保留一个核心地点，其他都当备选。",
+    metric: "复盘时看：路程是否轻松，预算是否可控，回来后是充电还是更累。",
+  },
+  {
+    key: "wearColor",
+    words: ["穿什么颜色", "适合什么颜色", "今天穿什么色", "颜色搭配", "黑色", "白色", "蓝色", "红色", "绿色", "粉色", "黄色", "灰色"],
+    title: "穿什么颜色",
+    meaning: "颜色类问题适合用卦象做氛围参考，再结合场合、肤色、天气和你想表达的气质。",
+    risk: "最怕只追求所谓幸运色，却忽略场合是否合适、自己穿着是否自在。",
+    action: "如果想稳重，优先黑白灰蓝；如果想亲和，选奶油色、浅粉、浅蓝；如果想有存在感，用小面积亮色点缀。",
+    metric: "复盘时看：你是否自在，别人是否更容易理解你的气质，照片效果是否舒服。",
+  },
+  {
+    key: "outfitStyle",
+    words: ["穿什么衣服", "穿搭", "搭配", "裙子", "裤子", "外套", "约会穿", "面试穿", "见朋友穿", "见家长穿", "拍照穿"],
+    title: "穿什么衣服 / 搭配",
+    meaning: "穿搭类问题要先看场合，再看你想给人的感觉。卦象适合提醒气质方向，不适合替代实际试穿。",
+    risk: "最怕为了特别而不舒服，或者为了安全而完全不像自己。",
+    action: "先确定场合：正式、休闲、约会、拍照、通勤。再选一个关键词：干净、温柔、利落、可爱、松弛或有气场。",
+    metric: "复盘时看：行动是否方便，是否符合场合，自己照镜子时是否喜欢。",
+  },
+  {
+    key: "dailyMood",
+    words: ["今天运势", "今天状态", "今天适合干嘛", "今天要注意什么", "心情不好", "没精神", "想放松", "休息"],
+    title: "今日状态 / 日常提醒",
+    meaning: "日常提醒不用断成大事，重点看今天适合进攻、整理、休息，还是避免冲动。",
+    risk: "最怕把一天的情绪波动看成命运结论，也怕状态差时硬逼自己做高难度事情。",
+    action: "先安排一个最重要的小事，再给自己留一点缓冲。状态差时先处理基础生活：吃饭、睡眠、收拾环境。",
+    metric: "复盘时看：今天是否更稳一点，是否完成一个小动作，是否减少了不必要消耗。",
+  },
+  {
     key: "aiInternet",
     words: ["AI", "人工智能", "剪辑", "设计", "接单", "自由职业", "远程", "外包", "课程", "知识付费", "互联网"],
     title: "AI / 互联网 / 自由职业",
     meaning: "互联网副业类问题要看交付能力和获客能力，不是会工具就一定能赚钱。",
     risk: "最怕沉迷学工具、买课程，却没有作品、报价和客户渠道。",
-    action: "先做一个可展示案例，明确服务内容、价格、交付时间，再去找10个潜在客户。",
-    metric: "复盘时看：是否有人询价，是否有人愿意付费，交付是否顺利。",
+    action: "先明确你能交付什么、交付标准是什么、谁会需要它，再做一次低成本验证。",
+    metric: "复盘时看：需求是否真实，交付是否顺利，是否有人愿意继续沟通。",
   },
   {
     key: "discipline",
@@ -1086,8 +1171,8 @@ const CONTEXT_LIBRARY = [
     title: "内容创作 / 自媒体",
     meaning: "内容问题要看持续输出和用户反馈。一次爆不爆不是核心，能否形成稳定主题才关键。",
     risk: "最怕每天研究爆款，却迟迟不发布；或者一条数据差就否定整个方向。",
-    action: "先做7天内容实验：每天一个选题，同一主题，不同标题和封面。",
-    metric: "复盘时看：哪类标题点击高，哪类内容收藏高，哪类评论更具体。",
+    action: "先做7天表达实验：围绕同一个主题，换不同角度表达，观察哪种更容易被理解。",
+    metric: "复盘时看：哪类表达更容易被理解、收藏、提问或转发。",
   },
   {
     key: "marriageCommitment",
@@ -1155,15 +1240,15 @@ function topicSpecificGuidance(topic, context, verdict, scenario) {
   const base = {
     career: {
       title: "事业/项目口径",
-      content: "看项目不要只问“能不能成”，而要问“下一步该不该推进”。如果结论是可小试，就适合做内容、问供应商、测价格；如果是先缓一缓，就先补流程和现金流。",
+      content: "看事业或项目不要只问“能不能成”，而要问“下一步该不该推进”。如果结论偏可行，先做一个可撤回的小步骤：确认条件、沟通关键人、试运行一小段；如果偏暂缓，先补信息、资源和风险边界。",
     },
     wealth: {
       title: "钱财/成交口径",
-      content: "问钱财时，重点不是流量多不多，而是成交是否不亏、售后是否可控、用户是否愿意为你的筛选付费。",
+      content: "问钱财时，重点不是有没有机会，而是收入、成本、风险、回款和最坏损失是否算清。",
     },
     relationship: {
       title: "关系/合作口径",
-      content: "问关系时，别只看对方说什么，要看应爻和现实行动。承诺、授权、价格、售后都要留下文字证据。",
+      content: "问关系时，别只看对方说什么，要看应爻和现实行动。重要承诺、边界、责任和时间点最好留下清楚记录。",
     },
     health: {
       title: "身心状态口径",
@@ -1358,7 +1443,7 @@ function detectScenario(topic, question, context = {}) {
   ].filter(Boolean).join(" ");
   const hasAny = (words) => words.some((word) => text.includes(word));
 
-  if (topic === "lost" || hasAny(["丢了", "不见了", "找不到", "失物", "遗失"])) {
+  if (topic === "lost" || hasAny(["丢了", "丢哪", "丢哪里", "不见了", "找不到", "找回来", "失物", "遗失"])) {
     return { key: "lost", label: "找失物", highCommitment: false };
   }
   if (hasAny(["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "见父母", "适合结婚", "合适结婚"])) {
@@ -1381,6 +1466,21 @@ function detectScenario(topic, question, context = {}) {
   }
   if (hasAny(["合同", "协议", "签约", "起诉", "仲裁", "律师", "赔偿", "违约", "纠纷"])) {
     return { key: "legal", label: "合同/法律", highCommitment: true, caution: "合同法律问题请保留证据并咨询专业人士。" };
+  }
+  if (hasAny(["吃什么", "吃啥", "点外卖", "餐厅", "饭店", "火锅", "烧烤", "奶茶", "咖啡", "晚饭", "午饭", "早餐", "宵夜"])) {
+    return { key: "eatDaily", label: "吃什么", highCommitment: false };
+  }
+  if (hasAny(["去哪玩", "去哪里玩", "约会去哪", "周末去哪", "逛街", "看电影", "展览", "公园", "海边", "爬山", "游乐园", "散步", "约朋友"])) {
+    return { key: "whereToPlay", label: "去哪玩", highCommitment: false };
+  }
+  if (hasAny(["穿什么颜色", "适合什么颜色", "今天穿什么色", "颜色搭配", "幸运色", "黑色", "白色", "蓝色", "红色", "绿色", "粉色", "黄色", "灰色"])) {
+    return { key: "wearColor", label: "穿什么颜色", highCommitment: false };
+  }
+  if (hasAny(["穿什么衣服", "穿搭", "搭配", "裙子", "裤子", "外套", "约会穿", "面试穿", "见朋友穿", "见家长穿", "拍照穿"])) {
+    return { key: "outfitStyle", label: "穿什么衣服", highCommitment: false };
+  }
+  if (hasAny(["今天运势", "今天状态", "今天适合干嘛", "今天要注意什么", "心情不好", "没精神", "想放松", "休息"])) {
+    return { key: "dailyMood", label: "今日状态", highCommitment: false };
   }
   if (hasAny(["出远门", "出行", "旅行", "旅游", "改期", "机票", "高铁", "酒店", "陌生城市", "安全吗"])) {
     return { key: "travel", label: "出行/安全", highCommitment: false };
@@ -1439,6 +1539,19 @@ function adaptVerdictForScenario(base, scenario, adjusted) {
     return { level: "不宜冲动消费", tone: "卦象提示消耗偏高，容易买完短暂开心、后续压力变大。" };
   }
 
+  if (["eatDaily", "whereToPlay", "wearColor", "outfitStyle", "dailyMood"].includes(scenario?.key)) {
+    const lightTone = {
+      eatDaily: ["可以选", "先按身体舒服、距离近、预算可接受来选，不用把吃饭变成重大选择。"],
+      whereToPlay: ["可以安排", "适合轻松出门，但行程别排太满，留一个备用地点就够。"],
+      wearColor: ["可以这样搭", "颜色更适合当作气质提示，优先选你穿着自在、符合场合的方案。"],
+      outfitStyle: ["可以这样穿", "先看场合，再看舒适度和你想表达的感觉，不必追求过度复杂。"],
+      dailyMood: ["适合轻安排", "今天更适合保留弹性，先完成一个小事，再看状态要不要加码。"],
+    }[scenario.key];
+    if (adjusted >= 2) return { level: lightTone[0], tone: lightTone[1] };
+    if (adjusted >= 0) return { level: "先简单一点", tone: "不要纠结太久，选一个低压力、可调整的方案就好。" };
+    return { level: "以舒服为主", tone: "今天不适合强迫自己表现，优先选择省心、稳妥、身体舒服的方案。" };
+  }
+
   if (scenario?.key === "product") {
     if (adjusted >= 3) return { level: "可以做小版本", tone: "先验证一个明确目标：理解率、留存、转化或付费意愿，不要一次大改。" };
     if (adjusted >= 1) return { level: "先小改测试", tone: "方向有可试空间，但要先找出用户到底卡在哪一步。" };
@@ -1469,6 +1582,11 @@ function scenarioPlainAdvice(scenario) {
     travel: "出行问题先看安全、天气、证件、交通和备用方案。",
     study: "考试问题不只看结果，更看复习节奏、错题反馈和时间分配。",
     shopping: "消费问题先分清刚需、生产力工具和情绪补偿。",
+    eatDaily: "吃饭问题看身体、距离、预算和同行人口味，不需要断成大事。",
+    whereToPlay: "出门玩先看精力、天气、路程和预算，轻松比完美更重要。",
+    wearColor: "颜色问题适合看氛围和场合，不要机械理解成唯一幸运色。",
+    outfitStyle: "穿搭问题先看场合和舒适度，再看你想表达的气质。",
+    dailyMood: "今日状态适合做轻提醒，重点是让今天更稳一点。",
     beautyMedical: "医美问题同时看健康风险和消费压力，资质与恢复期优先。",
     city: "城市去留要同时看机会、成本、通勤、人脉和身心状态。",
     product: "产品问题先看用户卡点和最小验证，不要一上来大改。",
@@ -1491,6 +1609,11 @@ function followupQuestions(scenario, topic, oralIntent) {
     travel: ["出行目的是否必须？", "天气、证件、交通、住宿是否确认？", "有没有备用路线和紧急联系人？"],
     study: ["离考试还有多久？", "当前完成率和薄弱科目是什么？", "每天能稳定学习几小时？"],
     shopping: ["这是刚需、生产力工具，还是情绪消费？", "买完是否影响房租/生活费/还款？", "能否延迟24小时再决定？"],
+    eatDaily: ["你现在更想吃清淡、热乎、重口，还是方便？", "是一个人吃，还是和别人一起？", "预算和距离有没有限制？"],
+    whereToPlay: ["你想放松、聊天、拍照、运动，还是尝鲜？", "天气和交通是否方便？", "同行的人更在意什么？"],
+    wearColor: ["今天是什么场合？", "你想显得稳重、亲和、清爽，还是有存在感？", "有没有必须避开的颜色？"],
+    outfitStyle: ["今天要见谁、做什么？", "你想要舒服、正式、可爱、利落，还是拍照好看？", "天气和行动量如何？"],
+    dailyMood: ["今天最重要的一件小事是什么？", "你现在是累、焦虑、兴奋，还是没方向？", "有没有必须完成的现实任务？"],
     beautyMedical: ["机构和医生资质是否确认？", "恢复期和风险你是否能接受？", "这笔钱是否会影响现金流？"],
     city: ["新城市/老家的收入机会是什么？", "生活成本和通勤成本是多少？", "三个月后不适合能否撤回？"],
     product: ["用户具体在哪一步看不懂？", "你要验证的是留存、转化、付费，还是理解成本？", "能否先改一个最小版本测试？"],
@@ -1505,8 +1628,8 @@ function buildFollowupHtml(scenario, context, oralIntent) {
   const questions = followupQuestions(scenario, undefined, oralIntent);
   return `
     <div class="reading-block followup-block">
-      <strong>想让结果更准，可以补充这些</strong>
-      <p>${enough ? "你已经补充了一些背景，下面这些问题可用于继续精细化判断。" : "你目前只写了主问题，系统可以先断大方向；如果要更贴题，建议补充下面几项。"}</p>
+      <strong>如果你想继续细看</strong>
+      <p>${enough ? "背景已经比单独一句问题清楚了。下面这些问题可以帮助系统把判断再收窄。" : "现在可以先看大方向；如果你想让回答更像在说你的具体情况，可以补充下面几项。"}</p>
       <ul>${questions.map((item) => `<li>${item}</li>`).join("")}</ul>
     </div>
   `;
@@ -1574,15 +1697,35 @@ function actionList(topic, analysis, verdict, context = {}, scenario) {
     list.push("先延迟24小时，再写下购买理由、替代方案、分期总成本和是否影响现金流。");
     list.push("如果它不能提升收入、效率或真实生活质量，就先不要用消费缓解焦虑。");
   }
+  if (scenario?.key === "eatDaily") {
+    list.push("先按“身体舒服、距离近、预算合适”三条选，不要饿着反复纠结。");
+    list.push("如果和别人一起吃，优先选大家都能接受的，而不是你脑中最完美的。");
+  }
+  if (scenario?.key === "whereToPlay") {
+    list.push("只定一个主地点和一个备用地点，别把放松日排成赶场日。");
+    list.push("先查天气、交通、营业时间和预算；任何一项不稳，就换成更轻松的方案。");
+  }
+  if (scenario?.key === "wearColor") {
+    list.push("先看场合：正式场合选黑白灰蓝更稳；轻松场合可以用浅色或小面积亮色。");
+    list.push("如果拿不准，就用基础色做主体，蓝色、银色、红色、绿色这类颜色只做点缀。");
+  }
+  if (scenario?.key === "outfitStyle") {
+    list.push("先确定关键词：干净、利落、温柔、可爱、松弛、有气场，只选一个主感觉。");
+    list.push("穿上后走动、坐下、拍照看一眼；不舒服或不自在，就不是今天的好搭配。");
+  }
+  if (scenario?.key === "dailyMood") {
+    list.push("今天先只定一个最重要的小事，完成后再决定要不要加任务。");
+    list.push("如果身体累，先处理吃饭、睡眠、洗澡、收拾环境这些基础事项。");
+  }
   if (scenario?.key === "product") {
     list.push("先问3个真实用户：哪一步看不懂、哪里想退出、他们最想要什么结果。");
     list.push("只改一个最小版本，用理解率、停留时间、转化或付费意愿来复盘。");
   }
   if (analysis.matchedKeys.includes("business")) {
-    list.push("把目标缩小成一个动作：发一篇、问一个供应商、测一个价格，不要同时做完整品牌。");
+    list.push("把目标缩小成一个动作：确认一个事实、完成一次小范围尝试、拿到一个真实反馈，不要一开始就把事情做重。");
   }
   if (analysis.matchedKeys.includes("sell")) {
-    list.push("如果涉及成交，先确认成本、运费、退换货，再报价；不要为了第一单大幅亏损。");
+    list.push("如果涉及钱或交易，先确认成本、交付、回款、责任边界，再承诺或报价。");
   }
   if (analysis.matchedKeys.includes("money")) {
     list.push("先写出最低生活费和可承受亏损线，超过这条线的动作全部暂停。");
@@ -1690,43 +1833,54 @@ function generateReading({ topic, question, main, changed, values, najia, change
       ? "你能不能承担后果，外部条件是否真实支持。"
       : "你有没有承受力，外部有没有真实反馈。";
 
+  const actionPreview = actions.slice(0, 2);
   return {
     tag: `${topicInfo.name}｜${verdict.level}｜${moving.label}`,
     html: `
-      <div class="reading-block">
+      <div class="result-hero">
+        <div>
+          <span class="hero-kicker">${scenario.label || topicInfo.name}</span>
+          <h2>${verdict.level}</h2>
+          <p>${verdict.tone}</p>
+        </div>
+        <div class="hero-mini">
+          <span>当前卦象</span>
+          <b>${main.name} → ${changed.name}</b>
+          <small>${moving.label}</small>
+        </div>
+      </div>
+      <div class="quick-next">
+        <strong>现在先做这两步</strong>
+        <ol>${actionPreview.map((item) => `<li>${item}</li>`).join("")}</ol>
+      </div>
+      <div class="reading-block question-translation">
         <strong>先把问题翻译成人话</strong>
         <p>${questionText}</p>
         <p>${contextText}</p>
       </div>
       ${oralIntentHtml}
       <div class="reading-block">
-        <strong>结论先说</strong>
+        <strong>一句话判断</strong>
         <p>这卦给出的倾向是：<b>${verdict.level}</b>。${verdict.tone}</p>
         <p>如果只看卦象：本卦「${main.name}」表示当前局面——${mainAction.plain}；变卦「${changed.name}」表示后续变化——${changedAction.plain}</p>
       </div>
       ${scenarioNotice}
       ${followupHtml}
       <div class="reading-block">
-        <strong>这卦到底在说什么</strong>
+        <strong>卦象翻译</strong>
         <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。${plainFrameText}</p>
         <p>${userSide}；${outsideSide}。所以这件事要同时看两边：${bothSideText}</p>
       </div>
       ${lostHtml}
-      <div class="reading-block">
-        <strong>为什么这样看</strong>
-        <p>上卦为${upper.name}，偏向「${upper.trait}」；下卦为${lower.name}，偏向「${lower.trait}」。${movingDetails}</p>
-      </div>
-      <div class="reading-block">
-        <strong>用神和现实焦点</strong>
-        <p>系统按你的问题自动取用神为「${najiaSummary.focus}」。简单说，${simpleUseMeaning}</p>
-        <p>对应爻：${useRowsText}。</p>
+      <details class="reading-block evidence-block">
+        <summary>为什么这样看：展开看依据</summary>
+        <p><b>卦体：</b>上卦为${upper.name}，偏向「${upper.trait}」；下卦为${lower.name}，偏向「${lower.trait}」。${movingDetails}</p>
+        <p><b>用神：</b>系统按你的问题自动取用神为「${najiaSummary.focus}」。简单说，${simpleUseMeaning}</p>
+        <p><b>对应爻：</b>${useRowsText}。</p>
         <p>${najiaSummary.text}</p>
-      </div>
-      <div class="reading-block">
-        <strong>动变关系</strong>
-        <p>${changeText}</p>
+        <p><b>动变：</b>${changeText}</p>
         <p>你可以把动爻理解成“事情正在变化的地方”。如果出现回头生，代表后续有补力；如果出现回头克，代表后续会反过来形成压力。</p>
-      </div>
+      </details>
       ${glossaryHtml}
       <div class="reading-block">
         <strong>风险点 / 有利点</strong>
@@ -1738,7 +1892,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
       </div>
       ${contextInsightHtml}
       <div class="reading-block">
-        <strong>对应这个问题，建议这样做</strong>
+        <strong>完整行动建议</strong>
         <ol>
           ${actions.map((item) => `<li>${item}</li>`).join("")}
         </ol>
@@ -1827,6 +1981,7 @@ function renderReadingFromCurrentCast(options = {}) {
   $("readingTag").textContent = reading.tag;
   $("readingText").innerHTML = reading.html;
   if (options.showNotice) {
+    $("readingNotice").textContent = options.noticeText || "已根据补充信息更新解读，请从这里继续看";
     $("readingNotice").classList.remove("hidden");
     $("readingPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     window.setTimeout(() => {
@@ -1933,6 +2088,13 @@ function cast() {
     mode === "coin"
       ? "当前为传统三枚铜钱法：每一枚铜钱正反概率各 1/2，因此老阴 1/8、少阳 3/8、少阴 3/8、老阳 1/8；阴阳总体各 1/2，所以本卦 64 卦概率均衡。"
       : "当前为四象均衡法：老阴、少阳、少阴、老阳每种爻象各 1/4。它更符合“四种结果概率持平”，但不是传统铜钱法概率。";
+
+  $("readingNotice").textContent = "起卦完成，先看下面这张结果卡片";
+  $("readingNotice").classList.remove("hidden");
+  $("readingPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  window.setTimeout(() => {
+    $("readingNotice").classList.add("hidden");
+  }, 4200);
 }
 
 $("castBtn").addEventListener("click", cast);
@@ -1956,7 +2118,7 @@ function init() {
     if ($("castDateTime").value) syncDateFieldsFromDate(new Date($("castDateTime").value));
   });
   $("topic").addEventListener("change", updateTopicUI);
-  $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
+  $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true, noticeText: "已重新解读，结果已更新在这里" }));
   document.querySelectorAll(".example-chip").forEach((button) => {
     button.addEventListener("click", () => {
       $("topic").value = button.dataset.topic || "general";
