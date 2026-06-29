@@ -9,19 +9,43 @@
   <body>
     <main class="page">
       <section class="hero">
-        <p class="eyebrow">LIU YAO ORACLE</p>
-        <h1>问事起卦</h1>
-        <p class="subtitle">
-          用六爻做趋势参考。先写问题，再起卦，最后用白话结果看下一步怎么做。
-        </p>
+        <div>
+          <p class="eyebrow">LIU YAO ORACLE</p>
+          <h1>问事起卦</h1>
+          <p class="subtitle">
+            把复杂的六爻结果翻译成普通人能看懂的趋势提醒。它不替你做决定，只帮你看清下一步。
+          </p>
+        </div>
+        <div class="hero-card">
+          <p>使用顺序</p>
+          <ol>
+            <li>先写一个具体问题</li>
+            <li>再补充真实处境</li>
+            <li>最后看“结论先说”和“建议这样做”</li>
+          </ol>
+        </div>
         <div class="steps">
-          <span>1 选择问题</span>
-          <span>2 写清背景</span>
-          <span>3 查看建议</span>
+          <span>问题越具体越准</span>
+          <span>专业排盘可折叠</span>
+          <span>重大决定不单看卦</span>
         </div>
       </section>
 
       <section class="panel controls">
+        <div class="guide-card">
+          <div>
+            <p class="label">START HERE</p>
+            <h3>不会问？直接点一个例子</h3>
+          </div>
+          <div class="example-row">
+            <button class="example-chip" type="button" data-topic="relationship" data-question="我想结婚合适不？接下来三个月要不要继续推进？">结婚合适吗</button>
+            <button class="example-chip" type="button" data-topic="career" data-question="我想辞职换方向，接下来一个月适不适合行动？">辞职换方向</button>
+            <button class="example-chip" type="button" data-topic="wealth" data-question="这个赚钱机会要不要做？我担心投入后回不了本。">赚钱机会</button>
+            <button class="example-chip" type="button" data-topic="lost" data-question="我的东西不见了，想知道大概在哪里、还能不能找回？">找失物</button>
+          </div>
+          <p class="mini-note">推荐问法：我想做什么 + 我担心什么 + 想看几天/几个月内的趋势。</p>
+        </div>
+
         <div class="section-title">
           <p class="label">STEP 1</p>
           <h3>你想问什么？</h3>
@@ -33,6 +57,7 @@
             <option value="coin">传统三枚铜钱法：老阴/老阳各 1/8，少阴/少阳各 3/8</option>
             <option value="balanced">四象均衡法：老阴/少阳/少阴/老阳各 1/4</option>
           </select>
+          <small class="help">普通用户不用纠结，默认第一项即可。第二项更像随机实验，四种爻概率完全相同。</small>
         </label>
 
         <label class="field">
@@ -51,6 +76,7 @@
         <label class="field">
           <span>所问之事（可选）</span>
           <textarea id="question" rows="3" placeholder="例如：我想换工作，接下来一个月适不适合投简历？"></textarea>
+          <small class="help">尽量别只写“我会好吗”。写清楚对象、时间和担心点，解读会更贴题。</small>
         </label>
 
         <section id="lostFields" class="lost-fields hidden">
@@ -136,7 +162,7 @@
 
         <label class="check">
           <input id="withReading" type="checkbox" checked />
-          <span>显示白话解读</span>
+          <span>显示白话解读（推荐开启）</span>
         </label>
 
         <div class="button-row">
@@ -181,6 +207,10 @@
           <p class="note">
             卦已经起好，不会重新随机。你可以补充背景后重新解读，让结果更像是在回答“你的事”，而不是泛泛讲卦。
           </p>
+          <div class="tip-box">
+            <strong>怎么填才有用？</strong>
+            <p>不要写得很玄，像和朋友讲事情一样写：发生了什么、你怕什么、你想判断什么。系统会根据这些信息重新组织解读。</p>
+          </div>
           <div class="context-grid">
             <label class="field">
               <span>你现在的真实处境</span>
@@ -211,7 +241,8 @@
         </article>
 
         <details class="panel details pro-details">
-          <summary>查看专业排盘与原始结果</summary>
+          <summary>专业排盘：纳甲、六亲、世应、六神、月建、日辰</summary>
+          <p class="note">看不懂也没关系。普通用户主要看上面的白话解读；这里保留给懂六爻的人复核。</p>
           <div class="sub-section">
             <h3>起卦结果</h3>
             <div id="meta" class="meta"></div>

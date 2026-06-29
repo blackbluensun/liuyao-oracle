@@ -943,6 +943,15 @@ const CONTEXT_LIBRARY = [
     metric: "复盘时看：哪类标题点击高，哪类内容收藏高，哪类评论更具体。",
   },
   {
+    key: "marriageCommitment",
+    words: ["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "见父母", "婆媳", "岳父母", "孩子", "适合结婚", "合适结婚"],
+    title: "结婚 / 长期承诺",
+    meaning: "结婚类问题不是“试一试”的问题，它更像长期共同生活的现实评估。卦象只能提醒关系节奏、阻力和风险点，不能替代双方认真沟通。",
+    risk: "最怕只凭一时情绪、催促、年龄压力或家人意见就定下来，忽略钱、家庭边界、居住、孩子、职业规划和冲突处理方式。",
+    action: "先和对方认真谈清楚五件事：钱如何安排、父母边界、住哪里、要不要孩子、吵架时怎么解决。谈不清楚时不急着领证。",
+    metric: "复盘时看：沟通后关系是否更清楚，对方是否愿意承担责任，现实阻力是否有解决方案，而不是只看甜不甜。",
+  },
+  {
     key: "importantDecision",
     words: ["重大决定", "人生", "结婚", "离婚", "买房", "卖房", "借钱", "合伙", "辞职", "创业", "移民"],
     title: "重大决策",
@@ -975,7 +984,27 @@ function matchedContextItems(context) {
     .map((entry) => entry.item);
 }
 
-function topicSpecificGuidance(topic, context, verdict) {
+function topicSpecificGuidance(topic, context, verdict, scenario) {
+  if (scenario?.key === "marriage") {
+    return {
+      title: "结婚/长期关系口径",
+      content: "这类问题不能按“可逆测试”处理。重点不是今天甜不甜，而是双方是否愿意长期承担责任，钱、父母边界、居住、孩子、职业规划和冲突处理是否能谈清楚。",
+      verdictText: verdict.level.includes("认真评估")
+        ? "当前可以进入认真评估和沟通阶段，但不要跳过现实确认。"
+        : verdict.level.includes("观察")
+          ? "当前更适合先观察与沟通，不急着领证或定婚期。"
+          : "当前不适合急着定终身，先把现实矛盾和双方态度看清楚。",
+    };
+  }
+  if (scenario?.highCommitment) {
+    return {
+      title: `${scenario.label}口径`,
+      content: "这属于高代价问题，卦象只能提醒节奏和风险点，不能替代现实证据、专业意见和你自己的承受能力。",
+      verdictText: verdict.level.includes("推进") || verdict.level.includes("评估")
+        ? "可以继续了解，但必须设置边界和后路。"
+        : "当前更适合补信息、降风险，不建议凭一卦直接定结果。",
+    };
+  }
   const base = {
     career: {
       title: "事业/项目口径",
@@ -1012,9 +1041,9 @@ function topicSpecificGuidance(topic, context, verdict) {
   };
 }
 
-function buildContextInsightHtml(topic, context, verdict) {
+function buildContextInsightHtml(topic, context, verdict, scenario) {
   const matched = matchedContextItems(context);
-  const topicGuide = topicSpecificGuidance(topic, context, verdict);
+  const topicGuide = topicSpecificGuidance(topic, context, verdict, scenario);
   const hasContext = contextCompleteness(context) > 0;
   if (!hasContext) {
     return `
@@ -1171,20 +1200,100 @@ function getMovingLines(values) {
     .filter((line) => line.value === 6 || line.value === 9);
 }
 
-function verdictFromScore(score, movingCount, topic, analysis) {
+function detectScenario(topic, question, context = {}) {
+  const text = [
+    topic,
+    question,
+    context.situation,
+    context.fear,
+    context.goal,
+    context.timeframe,
+  ].filter(Boolean).join(" ");
+  const hasAny = (words) => words.some((word) => text.includes(word));
+
+  if (topic === "lost" || hasAny(["丢了", "不见了", "找不到", "失物", "遗失"])) {
+    return { key: "lost", label: "找失物", highCommitment: false };
+  }
+  if (hasAny(["结婚", "婚姻", "领证", "订婚", "婚礼", "彩礼", "婚房", "见父母", "适合结婚", "合适结婚"])) {
+    return { key: "marriage", label: "结婚/长期关系", highCommitment: true };
+  }
+  if (hasAny(["离婚", "分手", "复合", "出轨", "冷战", "前任"])) {
+    return { key: "relationshipBreak", label: "感情重大选择", highCommitment: true };
+  }
+  if (hasAny(["买房", "卖房", "房贷", "首付", "贷款买房", "签购房"])) {
+    return { key: "house", label: "房产/贷款", highCommitment: true };
+  }
+  if (hasAny(["辞职", "裸辞", "跳槽", "转行", "入职", "offer", "签劳动合同"])) {
+    return { key: "job", label: "职业去留", highCommitment: true };
+  }
+  if (hasAny(["投资", "股票", "基金", "比特币", "币圈", "杠杆", "合约", "借钱", "贷款", "负债", "信用卡"])) {
+    return { key: "investment", label: "钱财风险", highCommitment: true };
+  }
+  if (hasAny(["手术", "治疗", "医院", "体检", "怀孕", "生病", "抑郁", "自杀", "轻生"])) {
+    return { key: "medical", label: "健康/医疗", highCommitment: true, caution: "健康问题请优先咨询医生或专业机构。" };
+  }
+  if (hasAny(["合同", "协议", "签约", "起诉", "仲裁", "律师", "赔偿", "违约", "纠纷"])) {
+    return { key: "legal", label: "合同/法律", highCommitment: true, caution: "合同法律问题请保留证据并咨询专业人士。" };
+  }
+  return { key: "normal", label: "普通问题", highCommitment: false };
+}
+
+function adaptVerdictForScenario(base, scenario, adjusted) {
+  if (scenario?.key === "marriage") {
+    if (adjusted >= 3) return { level: "可以认真评估", tone: "关系有继续深入的空间，但结婚要看长期责任，不建议只凭感觉或一时冲动定下来。" };
+    if (adjusted >= 1) return { level: "先观察与沟通", tone: "不是说不合适，而是还需要把现实问题谈清楚：钱、家庭边界、居住、孩子、职业规划和冲突处理。" };
+    if (adjusted >= -1) return { level: "暂缓定论", tone: "当前信息或关系稳定度还不够，不适合急着领证、订婚或给出终身承诺。" };
+    return { level: "不宜急着定", tone: "卦象提示阻力或消耗偏高，先看清现实矛盾与双方责任感，再决定是否继续推进。" };
+  }
+
+  if (scenario?.key === "lost") {
+    if (adjusted >= 3) return { level: "找回希望较高", tone: "优先从最后出现地点、常用收纳处和身边范围开始找。" };
+    if (adjusted >= 1) return { level: "可以继续找", tone: "线索还没断，先按方向、环境和物品类型逐步排查。" };
+    if (adjusted >= -1) return { level: "需要扩大范围", tone: "可能被遮挡、移动或暂时不显，建议问人并回看最后接触点。" };
+    return { level: "找回阻力偏大", tone: "先保留证据、询问相关人员，必要时联系场所、物业或平台客服。" };
+  }
+
+  if (scenario?.highCommitment) {
+    const caution = scenario.caution ? ` ${scenario.caution}` : "";
+    if (adjusted >= 3) return { level: "可以继续评估", tone: `但这是${scenario.label}问题，不能只凭卦象拍板，要同时看现实证据、成本、后路和专业意见。${caution}` };
+    if (adjusted >= 1) return { level: "谨慎推进", tone: `有继续了解的空间，但不要一次性做不可撤回决定；先补齐信息、确认风险边界。${caution}` };
+    if (adjusted >= -1) return { level: "先补信息", tone: `当前不适合直接定结果，先把关键证据、成本、责任和最坏情况写清楚。${caution}` };
+    return { level: "暂缓重大决定", tone: `当前风险或消耗偏高，不建议立刻做高代价动作。${caution}` };
+  }
+
+  return base;
+}
+
+function verdictFromScore(score, movingCount, topic, analysis, scenario) {
   let adjusted = score;
   if (movingCount >= 4) adjusted -= 1;
   if (analysis.matchedKeys.includes("emotion")) adjusted -= 1;
   if (analysis.matchedKeys.includes("money") && score < 1) adjusted -= 1;
 
-  if (adjusted >= 3) return { level: "可推进", tone: "但仍建议小步验证，不要一次性加码。" };
-  if (adjusted >= 1) return { level: "可小试", tone: "适合做低成本、可撤回的小动作。" };
-  if (adjusted >= -1) return { level: "先试探", tone: "信息还不够，先确认条件，不急着定生死。" };
-  return { level: "先缓一缓", tone: "当前风险或消耗偏高，先稳住基本盘。" };
+  let base;
+  if (adjusted >= 3) base = { level: "可推进", tone: "但仍建议小步验证，不要一次性加码。" };
+  else if (adjusted >= 1) base = { level: "可小试", tone: "适合做低成本、可撤回的小动作。" };
+  else if (adjusted >= -1) base = { level: "先试探", tone: "信息还不够，先确认条件，不急着定生死。" };
+  else base = { level: "先缓一缓", tone: "当前风险或消耗偏高，先稳住基本盘。" };
+
+  return adaptVerdictForScenario(base, scenario, adjusted);
 }
 
-function actionList(topic, analysis, verdict, context = {}) {
+function actionList(topic, analysis, verdict, context = {}, scenario) {
   const list = [];
+  if (scenario?.key === "marriage") {
+    list.push("先别问“能不能结”，先问“能不能一起承担长期生活”：钱、家人边界、住哪里、孩子、职业规划是否谈得下去。");
+    list.push("安排一次认真沟通，不要只聊感情浓度，要聊具体责任：谁出钱、谁照顾家庭、遇到冲突怎么解决。");
+    list.push("如果对方回避现实问题、只催你表态，先暂缓；愿意一起解决问题，才进入下一步评估。");
+    if (context.fear) list.push(`把你最担心的点「${context.fear}」直接转成沟通问题，不要只在心里反复猜。`);
+    list.push("复盘标准：沟通后你是更安心、更清楚，还是更混乱、更委屈。后者不适合急着定。");
+    return list;
+  }
+  if (scenario?.highCommitment) {
+    list.push(`这是${scenario.label}问题，先列出最坏结果、可承受范围和撤回方案。`);
+    list.push("把关键证据写下来：钱、合同、对方承诺、时间节点、责任边界，不要只凭感觉判断。");
+    if (scenario.caution) list.push(scenario.caution);
+  }
   if (analysis.matchedKeys.includes("business")) {
     list.push("把目标缩小成一个动作：发一篇、问一个供应商、测一个价格，不要同时做完整品牌。");
   }
@@ -1206,8 +1315,11 @@ function actionList(topic, analysis, verdict, context = {}) {
   if (list.length === 0) {
     list.push(verdict.level === "可推进" ? "可以推进，但先定一个最小版本。" : "先补信息，再做决定。");
   }
-  if (context.goal) {
+  if (context.goal && !scenario?.highCommitment) {
     list.push(`围绕你最想判断的结果「${context.goal}」，先拆成一个可执行测试，不要直接跳到最终结论。`);
+  }
+  if (context.goal && scenario?.highCommitment) {
+    list.push(`围绕你想判断的结果「${context.goal}」，先确认现实条件是否支持，而不是直接跳到最终答案。`);
   }
   if (context.fear) {
     list.push(`把你最担心的点「${context.fear}」写成检查清单，先排除最容易出事的一项。`);
@@ -1226,8 +1338,9 @@ function generateReading({ topic, question, main, changed, values, najia, change
   const upper = TRIGRAMS[main.upper];
   const lower = TRIGRAMS[main.lower];
   const score = mainAction.score + Math.round(changedAction.score * 0.6);
-  const verdict = verdictFromScore(score, movingLines.length, topic, analysis);
-  const actions = actionList(topic, analysis, verdict, userContext);
+  const scenario = detectScenario(topic, question, userContext);
+  const verdict = verdictFromScore(score, movingLines.length, topic, analysis, scenario);
+  const actions = actionList(topic, analysis, verdict, userContext, scenario);
   const najiaSummary = summarizeNajia(najia, topic, analysis);
   const changeText = changeRelations.length
     ? changeRelations.map((item) => `第${item.index + 1}爻${item.relation}：${item.from.relation}${item.from.branch}${item.from.element} → ${item.to.relation}${item.to.branch}${item.to.element}`).join("；")
@@ -1258,7 +1371,13 @@ function generateReading({ topic, question, main, changed, values, najia, change
     (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月克") || r.dayEffects.includes("日克")) ? "用神受克，现实阻力偏强，不能只靠意愿推进。" : "",
     (najiaSummary.focusRows || []).some((r) => r.monthEffects.includes("月生") || r.dayEffects.includes("日生") || r.monthEffects.includes("临月") || r.dayEffects.includes("临日")) ? "用神得生扶，说明并非完全没机会，关键是方式要轻。" : "",
   ].filter(Boolean);
-  const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict);
+  const scenarioNotice = scenario.highCommitment
+    ? `<div class="reading-block scenario-notice">
+        <strong>重大问题提醒</strong>
+        <p>系统识别到这是「${scenario.label}」问题。它不适合用“低成本试一试”的口径判断，卦象只能作为趋势提醒；真正要看的，是现实条件、责任边界、证据和你能不能承担后果。</p>
+      </div>`
+    : "";
+  const contextInsightHtml = buildContextInsightHtml(topic, userContext, verdict, scenario);
   const lostHtml = topic === "lost"
     ? buildLostItemReading({ main, najia, najiaSummary, changeRelations, userContext })
     : "";
@@ -1276,6 +1395,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
         <p>这卦给出的倾向是：<b>${verdict.level}</b>。${verdict.tone}</p>
         <p>如果只看卦象：本卦「${main.name}」表示当前局面——${mainAction.plain}；变卦「${changed.name}」表示后续变化——${changedAction.plain}</p>
       </div>
+      ${scenarioNotice}
       <div class="reading-block">
         <strong>这卦到底在说什么</strong>
         <p>用普通话讲，本卦看“现在是什么状态”，变卦看“接下来会往哪里变”。${topic === "lost" ? "找失物时，重点不是问玄不玄，而是把卦象转成寻找路线。" : "这次不是让你马上押注，而是提醒你：先看清当前局面，再用小动作验证。"}</p>
@@ -1324,7 +1444,7 @@ function generateReading({ topic, question, main, changed, values, najia, change
       </div>
       <div class="reading-block">
         <strong>${userContext.timeframe || "7天内"}的判断口径</strong>
-        <p>这次更适合看短期趋势，不适合直接推导长期命运。你可以按上面的动作做一个小测试，到时间后用真实反馈复盘：有没有询单、有没有成交、有没有成本失控、你的状态有没有更稳。</p>
+        <p>${scenario.highCommitment ? "这次适合看当前关系/局势的风险和节奏，不适合直接替你决定终身或高代价结果。到时间后重点复盘：现实问题是否更清楚、对方是否承担责任、风险是否下降、你是否更稳定。" : "这次更适合看短期趋势，不适合直接推导长期命运。你可以按上面的动作做一个小测试，到时间后用真实反馈复盘：有没有询单、有没有成交、有没有成本失控、你的状态有没有更稳。"}</p>
       </div>
     `,
   };
@@ -1536,6 +1656,14 @@ function init() {
   });
   $("topic").addEventListener("change", updateTopicUI);
   $("reinterpretBtn").addEventListener("click", () => renderReadingFromCurrentCast({ showNotice: true }));
+  document.querySelectorAll(".example-chip").forEach((button) => {
+    button.addEventListener("click", () => {
+      $("topic").value = button.dataset.topic || "general";
+      $("question").value = button.dataset.question || "";
+      updateTopicUI();
+      $("question").focus();
+    });
+  });
   updateTopicUI();
 }
 
